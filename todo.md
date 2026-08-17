@@ -18,13 +18,13 @@
 - [x] Configurar assinatura Android estável para atualizações sobre a instalação existente
 - [x] Criar GitHub Action para gerar APK e publicar release baixável
 - [x] Documentar como gerar e instalar novas atualizações Android
-- [ ] Entregar backup protegido da chave de assinatura Android
+- [x] Entregar backup protegido da chave de assinatura Android
 - [x] Criar estrutura de inventário e regras de acesso no Supabase
 - [x] Registrar o aplicativo Android no Firebase e preparar notificações
 - [ ] Conectar o aplicativo aos serviços configurados e validar sincronização
 - [ ] Centralizar alertas, dispositivos e preferências de notificação no Supabase
 - [x] Cadastrar configurações protegidas de Firebase e Supabase no GitHub
-- [ ] Entregar ZIP protegido e organizado de todas as credenciais utilizadas
+- [x] Entregar ZIP protegido e organizado de todas as credenciais utilizadas
 - [x] Criar o projeto Firebase do ValidaEstoque e registrar o pacote Android
 - [x] Gerar a primeira release final e disponibilizar o APK para teste
 - [x] Manter distribuição direta por APK, sem publicação na Play Store
