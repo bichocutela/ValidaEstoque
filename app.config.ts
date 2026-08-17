@@ -30,9 +30,7 @@ const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "ValidaEstoque",
   appSlug: "validade-estoque",
-  // S3 URL of the app logo - set this to the URL returned by generate_image when creating custom logo
-  // Leave empty to use the default icon from assets/images/icon.png
-  logoUrl: "",
+  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663678042974/mWLHRcyitYxIBQGe.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -51,7 +49,8 @@ const config: ExpoConfig = {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
     "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Permita que o ValidaEstoque use a câmera para registrar embalagens e ler códigos de barras."
       }
   },
   android: {
@@ -64,7 +63,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS"],
+    permissions: ["POST_NOTIFICATIONS", "CAMERA"],
     intentFilters: [
       {
         action: "VIEW",
@@ -86,6 +85,12 @@ const config: ExpoConfig = {
   },
   plugins: [
     "expo-router",
+    [
+      "expo-camera",
+      {
+        "cameraPermission": "Permita que o ValidaEstoque use a câmera para registrar embalagens e ler códigos de barras."
+      }
+    ],
     [
       "expo-audio",
       {

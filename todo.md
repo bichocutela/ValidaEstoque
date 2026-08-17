@@ -1,0 +1,17 @@
+# Project TODO
+
+- [x] Definir direção visual e modelo de dados para validade, lotes e movimentações
+- [x] Implementar tela de login e entrada na rotina de trabalho
+- [x] Implementar painel inicial com indicadores e atenção necessária
+- [x] Implementar catálogo pesquisável de produtos com agrupamento por lote
+- [x] Implementar detalhe do produto e detalhe completo de lote
+- [x] Implementar tela de scanner e formulário de cadastro editável
+- [x] Implementar alerta de validade crítica no recebimento
+- [x] Implementar aba de validades com filtros e ordenação
+- [x] Implementar baixa de estoque com confirmação e preservação de histórico
+- [x] Implementar histórico de movimentações e relatório de perdas
+- [x] Implementar área Mais e configurações de alertas
+- [x] Criar identidade visual e ícones do aplicativo
+- [x] Validar fluxos, tipos e experiência em visualização mobile
+- [ ] Criar commit e enviar a versão final para bichocutela/ValidaEstoque
+- [x] Otimizar e disponibilizar o ícone no armazenamento do projeto
