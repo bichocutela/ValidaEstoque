@@ -13,5 +13,5 @@
 - [x] Implementar área Mais e configurações de alertas
 - [x] Criar identidade visual e ícones do aplicativo
 - [x] Validar fluxos, tipos e experiência em visualização mobile
-- [ ] Criar commit e enviar a versão final para bichocutela/ValidaEstoque
+- [x] Criar commit e enviar a versão final para bichocutela/ValidaEstoque
 - [x] Otimizar e disponibilizar o ícone no armazenamento do projeto
