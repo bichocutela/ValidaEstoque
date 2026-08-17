@@ -10,7 +10,7 @@ O Android só aceita uma atualização quando três condições são preservadas
 
 ## Preparação única no GitHub
 
-Abra **Settings → Actions → General** no repositório. Em **Workflow permissions**, selecione **Read and write permissions** e salve; essa permissão permite que o workflow crie a release e anexe o APK. Em seguida, abra **Settings → Secrets and variables → Actions → New repository secret** e crie os quatro segredos abaixo:
+Abra **Settings → Actions → General** no repositório. Em **Workflow permissions**, selecione **Read and write permissions** e salve; essa permissão permite que o workflow crie a release e anexe o APK. Em seguida, abra **Settings → Secrets and variables → Actions → New repository secret** e cadastre os segredos abaixo:
 
 | Segredo                     | Conteúdo                                                       | Finalidade                               |
 | --------------------------- | -------------------------------------------------------------- | ---------------------------------------- |
@@ -18,8 +18,11 @@ Abra **Settings → Actions → General** no repositório. Em **Workflow permiss
 | `ANDROID_KEYSTORE_PASSWORD` | Senha do keystore                                              | Abre o arquivo da chave durante o build  |
 | `ANDROID_KEY_ALIAS`         | Alias usado ao criar a chave, por exemplo `validaestoque`      | Seleciona a chave correta no keystore    |
 | `ANDROID_KEY_PASSWORD`      | Senha da chave                                                 | Assina a variante de release             |
+| `FIREBASE_GOOGLE_SERVICES_JSON_BASE64` | Arquivo `google-services.json` codificado em Base64 | Disponibiliza a configuração Firebase no projeto Android durante a build |
+| `SUPABASE_URL` | Endpoint do projeto Supabase | Referência da integração de inventário e alertas |
+| `SUPABASE_PUBLISHABLE_KEY` | Chave pública rotacionável do Supabase | Inicializa as chamadas autenticadas do aplicativo |
 
-O token conectado a esta automação não possui permissão para gravar segredos no repositório; por isso, esse cadastramento deve ser feito na conta proprietária do GitHub. Nunca envie o arquivo `.keystore` ou suas senhas para o repositório.
+Nunca envie o arquivo `.keystore`, suas senhas ou o `google-services.json` diretamente para o repositório. O workflow recupera essas configurações dos segredos criptografados apenas durante a build.
 
 ## Criar a chave uma única vez
 
@@ -46,7 +49,7 @@ Após a conclusão, abra a release criada, baixe o APK e instale-o no Android. P
 
 | Mensagem ou comportamento                | Causa provável                                                 | Correção                                                         |
 | ---------------------------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------- |
-| O workflow informa segredo ausente       | Um dos quatro segredos não foi cadastrado                      | Revise os nomes e valores em **Secrets and variables → Actions** |
+| O workflow informa segredo ausente       | Uma configuração obrigatória não foi cadastrada                | Revise os nomes e valores em **Secrets and variables → Actions** |
 | A release não é criada                   | Permissões de workflow somente leitura                         | Ative **Read and write permissions** em **Actions → General**    |
 | Android pede desinstalação               | Chave diferente, pacote diferente ou versionCode não crescente | Use a mesma chave, mantenha o pacote e aumente o versionCode     |
 | Erro ao instalar por bloqueio do sistema | Instalação de fontes desconhecidas não permitida               | Autorize o navegador/gerenciador de arquivos que abriu o APK     |

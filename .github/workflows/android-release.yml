@@ -81,8 +81,22 @@ jobs:
           echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/validaestoque-release.keystore"
           echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/validaestoque-release.keystore" >> "$GITHUB_ENV"
 
+      - name: Recuperar configuração Firebase
+        env:
+          FIREBASE_GOOGLE_SERVICES_JSON_BASE64: ${{ secrets.FIREBASE_GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -z "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" ]; then
+            echo "O segredo FIREBASE_GOOGLE_SERVICES_JSON_BASE64 não está configurado no repositório."
+            exit 1
+          fi
+          mkdir -p "$RUNNER_TEMP/firebase"
+          echo "$FIREBASE_GOOGLE_SERVICES_JSON_BASE64" | base64 --decode > "$RUNNER_TEMP/firebase/google-services.json"
+
       - name: Gerar projeto Android
         run: npx expo prebuild --platform android --non-interactive --clean
+
+      - name: Disponibilizar configuração Firebase no Android
+        run: cp "$RUNNER_TEMP/firebase/google-services.json" android/app/google-services.json
 
       - name: Aplicar assinatura de release
         env:

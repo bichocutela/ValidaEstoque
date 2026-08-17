@@ -15,13 +15,19 @@
 - [x] Validar fluxos, tipos e experiência em visualização mobile
 - [x] Criar commit e enviar a versão final para bichocutela/ValidaEstoque
 - [x] Otimizar e disponibilizar o ícone no armazenamento do projeto
-- [ ] Configurar assinatura Android estável para atualizações sobre a instalação existente
+- [x] Configurar assinatura Android estável para atualizações sobre a instalação existente
 - [x] Criar GitHub Action para gerar APK e publicar release baixável
 - [x] Documentar como gerar e instalar novas atualizações Android
 - [ ] Entregar backup protegido da chave de assinatura Android
-- [ ] Criar estrutura de inventário e regras de acesso no Supabase
-- [ ] Registrar o aplicativo Android no Firebase e preparar notificações
+- [x] Criar estrutura de inventário e regras de acesso no Supabase
+- [x] Registrar o aplicativo Android no Firebase e preparar notificações
 - [ ] Conectar o aplicativo aos serviços configurados e validar sincronização
 - [ ] Centralizar alertas, dispositivos e preferências de notificação no Supabase
-- [ ] Cadastrar configurações protegidas de Firebase e Supabase no GitHub
+- [x] Cadastrar configurações protegidas de Firebase e Supabase no GitHub
 - [ ] Entregar ZIP protegido e organizado de todas as credenciais utilizadas
+- [x] Criar o projeto Firebase do ValidaEstoque e registrar o pacote Android
+- [x] Gerar a primeira release final e disponibilizar o APK para teste
+- [x] Manter distribuição direta por APK, sem publicação na Play Store
+- [ ] Manter a sessão autenticada disponível enquanto permanecer válida
+- [ ] Preservar as sessões GitHub e Google/Firebase enquanto permanecerem válidas
+- [ ] Preservar sessões nos três ambientes indicados, incluindo app da loja e app da igreja

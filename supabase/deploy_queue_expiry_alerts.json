@@ -1,0 +1,12 @@
+{
+  "project_id": "kkayksyzksexoarpfxyj",
+  "name": "queue-expiry-alerts",
+  "verify_jwt": true,
+  "entrypoint_path": "index.ts",
+  "files": [
+    {
+      "name": "index.ts",
+      "content": "import \"jsr:@supabase/functions-js/edge-runtime.d.ts\";\nimport { createClient } from \"jsr:@supabase/supabase-js@2\";\nfunction getServiceClient() { const url = Deno.env.get(\"SUPABASE_URL\"); const keys = Deno.env.get(\"SUPABASE_SECRET_KEYS\"); if (!url || !keys) throw new Error(\"Credenciais internas do Supabase indisponíveis.\"); return createClient(url, JSON.parse(keys).default as string, { auth: { persistSession: false } }); }\nDeno.serve(async (request) => { if (request.method !== \"POST\") return new Response(JSON.stringify({ error: \"Método não permitido\" }), { status: 405 }); const supabase = getServiceClient(); const { data, error } = await supabase.rpc(\"queue_expiry_alerts\"); if (error) throw error; return new Response(JSON.stringify({ queued: data }), { headers: { \"Content-Type\": \"application/json\" } }); });"
+    }
+  ]
+}
