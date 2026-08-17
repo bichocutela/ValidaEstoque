@@ -15,3 +15,6 @@
 - [x] Validar fluxos, tipos e experiência em visualização mobile
 - [x] Criar commit e enviar a versão final para bichocutela/ValidaEstoque
 - [x] Otimizar e disponibilizar o ícone no armazenamento do projeto
+- [ ] Configurar assinatura Android estável para atualizações sobre a instalação existente
+- [x] Criar GitHub Action para gerar APK e publicar release baixável
+- [x] Documentar como gerar e instalar novas atualizações Android

@@ -30,16 +30,20 @@ const env = {
   // App branding - update these values directly (do not use env vars)
   appName: "ValidaEstoque",
   appSlug: "validade-estoque",
-  logoUrl: "https://files.manuscdn.com/user_upload_by_module/session_file/310519663678042974/mWLHRcyitYxIBQGe.png",
+  logoUrl:
+    "https://files.manuscdn.com/user_upload_by_module/session_file/310519663678042974/mWLHRcyitYxIBQGe.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
 };
 
+const appVersion = process.env.APP_VERSION ?? "1.0.0";
+const androidVersionCode = Number(process.env.ANDROID_VERSION_CODE ?? "1");
+
 const config: ExpoConfig = {
   name: env.appName,
   slug: env.appSlug,
-  version: "1.0.0",
+  version: appVersion,
   orientation: "portrait",
   icon: "./assets/images/icon.png",
   scheme: env.scheme,
@@ -48,12 +52,14 @@ const config: ExpoConfig = {
   ios: {
     supportsTablet: true,
     bundleIdentifier: env.iosBundleId,
-    "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false,
-        "NSCameraUsageDescription": "Permita que o ValidaEstoque use a câmera para registrar embalagens e ler códigos de barras."
-      }
+    infoPlist: {
+      ITSAppUsesNonExemptEncryption: false,
+      NSCameraUsageDescription:
+        "Permita que o ValidaEstoque use a câmera para registrar embalagens e ler códigos de barras.",
+    },
   },
   android: {
+    versionCode: androidVersionCode,
     adaptiveIcon: {
       backgroundColor: "#E6F4FE",
       foregroundImage: "./assets/images/android-icon-foreground.png",
@@ -88,13 +94,15 @@ const config: ExpoConfig = {
     [
       "expo-camera",
       {
-        "cameraPermission": "Permita que o ValidaEstoque use a câmera para registrar embalagens e ler códigos de barras."
-      }
+        cameraPermission:
+          "Permita que o ValidaEstoque use a câmera para registrar embalagens e ler códigos de barras.",
+      },
     ],
     [
       "expo-audio",
       {
-        microphonePermission: "Allow $(PRODUCT_NAME) to access your microphone.",
+        microphonePermission:
+          "Allow $(PRODUCT_NAME) to access your microphone.",
       },
     ],
     [

@@ -1,0 +1,121 @@
+name: Gerar APK Android
+
+run-name: APK ${{ inputs.version_name || format('1.0.{0}', github.run_number) }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_name:
+        description: "Versão exibida (ex.: 1.0.2). Deixe vazio para usar 1.0.<número da execução>."
+        required: false
+        type: string
+      version_code:
+        description: "Número interno crescente. Deixe vazio para usar o número da execução."
+        required: false
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  APP_VERSION: ${{ inputs.version_name || format('1.0.{0}', github.run_number) }}
+  ANDROID_VERSION_CODE: ${{ inputs.version_code || github.run_number }}
+
+jobs:
+  build-release:
+    name: Criar APK assinado
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Baixar código
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Preparar Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Preparar dependências
+        run: |
+          corepack enable
+          pnpm install --frozen-lockfile
+
+      - name: Validar código
+        run: |
+          pnpm test
+          pnpm check
+
+      - name: Validar versão Android
+        run: |
+          if ! [[ "$ANDROID_VERSION_CODE" =~ ^[1-9][0-9]*$ ]]; then
+            echo "ANDROID_VERSION_CODE deve ser um inteiro positivo."
+            exit 1
+          fi
+
+      - name: Recuperar chave de assinatura
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          for secret in ANDROID_KEYSTORE_BASE64 ANDROID_KEYSTORE_PASSWORD ANDROID_KEY_ALIAS ANDROID_KEY_PASSWORD; do
+            if [ -z "${!secret}" ]; then
+              echo "O segredo $secret não está configurado no repositório."
+              exit 1
+            fi
+          done
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/validaestoque-release.keystore"
+          echo "ANDROID_KEYSTORE_PATH=$RUNNER_TEMP/validaestoque-release.keystore" >> "$GITHUB_ENV"
+
+      - name: Gerar projeto Android
+        run: npx expo prebuild --platform android --non-interactive --clean
+
+      - name: Aplicar assinatura de release
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: node scripts/configure-android-signing.mjs
+
+      - name: Compilar APK assinado
+        run: |
+          cd android
+          ./gradlew app:assembleRelease --no-daemon
+
+      - name: Preparar arquivo de distribuição
+        run: |
+          mkdir -p release
+          cp android/app/build/outputs/apk/release/app-release.apk "release/ValidaEstoque-${APP_VERSION}.apk"
+
+      - name: Guardar APK na execução
+        uses: actions/upload-artifact@v4
+        with:
+          name: ValidaEstoque-APK-${{ env.APP_VERSION }}
+          path: release/ValidaEstoque-${{ env.APP_VERSION }}.apk
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Publicar release baixável
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          tag="v${APP_VERSION}"
+          file="release/ValidaEstoque-${APP_VERSION}.apk"
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$tag" "$file" --clobber --repo "$GITHUB_REPOSITORY"
+          else
+            gh release create "$tag" "$file" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$GITHUB_SHA" \
+              --title "ValidaEstoque ${APP_VERSION}" \
+              --generate-notes
+          fi
