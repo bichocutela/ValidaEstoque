@@ -45,8 +45,8 @@
 - [x] Replicar no ValidaEstoque o padrão completo de atualização interna aprovado pelo usuário
 - [x] Concluir a substituição do ícone do launcher antes do commit e push
 - [x] Confirmar a logo final recebida nos assets do launcher antes da sincronização
-- [ ] Gerar APK assinada com logo final e atualizador interno para teste em dispositivo físico
+- [x] Gerar APK assinada com logo final e atualizador interno para teste em dispositivo físico
 - [x] Criar a seção Sobre abaixo de Configurações com o conteúdo institucional fornecido
 - [x] Exibir a versão instalada e o período de direitos autorais atualizado automaticamente por ano
 - [x] Posicionar o aviso de atualização abaixo da seção Sobre
-- [ ] Gerar uma nova APK após concluir a seção Sobre e validar a versão instalada
+- [x] Gerar uma nova APK após concluir a seção Sobre e validar a versão instalada
