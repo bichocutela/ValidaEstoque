@@ -31,3 +31,6 @@
 - [ ] Manter a sessão autenticada disponível enquanto permanecer válida
 - [ ] Preservar as sessões GitHub e Google/Firebase enquanto permanecerem válidas
 - [ ] Preservar sessões nos três ambientes indicados, incluindo app da loja e app da igreja
+- [x] Configurar login temporário com usuário e senha admin/admin
+- [x] Revisar todos os botões e concluir ações interativas sem rotas mortas
+- [x] Criar testes de regressão para autenticação e fluxos dos controles principais

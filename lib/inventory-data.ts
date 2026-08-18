@@ -5,7 +5,7 @@ export { dateFromKey, daysUntil, formatDate, formatDays, getLotTone };
 
 export type Quality = "Bom estado" | "Deteriorado" | "Estragado" | "Vencido";
 export type ArrivalStatus = "Normal" | "Validade crítica" | "Avariado";
-export type MovementType = "Recebido" | "Vendido" | "Avariado" | "Vencido" | "Estragado" | "Ajuste";
+export type MovementType = "Recebido" | "Conferido" | "Vendido" | "Avariado" | "Vencido" | "Estragado" | "Ajuste";
 
 export type InventoryProduct = {
   id: string;

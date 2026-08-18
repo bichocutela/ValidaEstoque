@@ -14,7 +14,7 @@ const arrivalOptions: ArrivalStatus[] = ["Normal", "Validade crítica", "Avariad
 type IconName = ComponentProps<typeof MaterialIcons>["name"];
 
 function activityColor(type: MovementType) {
-  if (type === "Recebido") return "#16794D";
+  if (type === "Recebido" || type === "Conferido") return "#16794D";
   if (type === "Vendido") return "#0B5D52";
   return "#C73737";
 }
@@ -22,7 +22,7 @@ function activityColor(type: MovementType) {
 export default function LotDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { getLot, getProduct, movements, createMovement, editLot } = useInventory();
+  const { getLot, getProduct, movements, createMovement, editLot, confirmLot } = useInventory();
   const [lowStockOpen, setLowStockOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [reason, setReason] = useState<MovementType>("Vendido");
@@ -50,7 +50,7 @@ export default function LotDetailScreen() {
       <Pressable onPress={() => router.back()} style={({ pressed }) => [styles.back, pressed && styles.pressed]}><MaterialIcons name="arrow-back" size={22} color="#18211F" /></Pressable>
       <View style={styles.hero}><ProductThumb source={product.image} size="large" /><View style={styles.heroText}><Text style={styles.productName}>{product.name}</Text><Text style={styles.brand}>{product.brand} · {product.volume}</Text><Text style={styles.lotCode}>Lote {lot.code}</Text><StatusPill lot={lot} /></View></View>
       <View style={styles.stockCard}><View><Text style={styles.stockLabel}>Saldo atual</Text><Text style={styles.stockValue}>{lot.currentQuantity}<Text style={styles.stockUnit}> un.</Text></Text></View><View style={styles.stockDivider} /><View><Text style={styles.stockLabel}>Validade</Text><Text style={styles.stockDate}>{formatDate(lot.expiryDate)}</Text><Text style={styles.stockStatus}>{formatDays(daysUntil(lot.expiryDate))}</Text></View></View>
-      <View style={styles.actions}><Action icon="task-alt" label="Conferir" color="#16794D" onPress={() => Alert.alert("Conferência registrada", "O lote foi confirmado pela operação.")} /><Action icon="remove-shopping-cart" label="Dar baixa" color="#C73737" onPress={() => setLowStockOpen(true)} /><Action icon="edit-note" label="Editar" color="#0B5D52" onPress={() => { setEditDate(lot.expiryDate); setEditQuality(lot.quality); setEditArrival(lot.arrivalStatus); setEditOpen(true); }} /></View>
+      <View style={styles.actions}><Action icon="task-alt" label="Conferir" color="#16794D" onPress={() => { confirmLot(lot.id); Alert.alert("Conferência registrada", "A conferência foi adicionada ao histórico do lote."); }} /><Action icon="remove-shopping-cart" label="Dar baixa" color="#C73737" onPress={() => setLowStockOpen(true)} /><Action icon="edit-note" label="Editar" color="#0B5D52" onPress={() => { setEditDate(lot.expiryDate); setEditQuality(lot.quality); setEditArrival(lot.arrivalStatus); setEditOpen(true); }} /></View>
       <Text style={styles.sectionTitle}>Informações do lote</Text>
       <View style={styles.infoCard}><Info icon="calendar-month" label="Data de recebimento" value={formatDate(lot.receivedAt)} /><Info icon="inventory" label="Quantidade inicial" value={`${lot.initialQuantity} unidades`} /><Info icon="health-and-safety" label="Qualidade" value={lot.quality} /><Info icon="local-shipping" label="Situação" value={lot.arrivalStatus} /></View>
       <View style={styles.historyHeading}><Text style={styles.sectionTitle}>Histórico do lote</Text><Pressable onPress={() => router.push("/history")}><Text style={styles.link}>Ver completo</Text></Pressable></View>
