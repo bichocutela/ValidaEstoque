@@ -50,3 +50,7 @@
 - [x] Exibir a versão instalada e o período de direitos autorais atualizado automaticamente por ano
 - [x] Posicionar o aviso de atualização abaixo da seção Sobre
 - [x] Gerar uma nova APK após concluir a seção Sobre e validar a versão instalada
+- [x] Corrigir a área segura do ícone adaptativo para exibir a logo completa na gaveta Android
+- [ ] Gerar uma APK de validação após corrigir o ícone adaptativo
+- [x] Remover a configuração de ícone adaptativo e manter a logo completa no ícone convencional
+- [x] Replicar no ValidaEstoque o padrão de ícone aprovado no projeto NRD Lojas
