@@ -37,8 +37,8 @@ const env = {
   androidPackage: bundleId,
 };
 
-const appVersion = process.env.APP_VERSION ?? "1.0.0";
-const androidVersionCode = Number(process.env.ANDROID_VERSION_CODE ?? "1");
+const appVersion = process.env.APP_VERSION ?? "1.0.4";
+const androidVersionCode = Number(process.env.ANDROID_VERSION_CODE ?? "4");
 
 const config: ExpoConfig = {
   name: env.appName,
