@@ -94,6 +94,13 @@ const config: ExpoConfig = {
       },
     ],
     [
+      "expo-notifications",
+      {
+        color: "#0B5D52",
+        defaultChannel: "validade-alertas",
+      },
+    ],
+    [
       "expo-audio",
       {
         microphonePermission:

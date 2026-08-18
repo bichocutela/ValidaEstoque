@@ -54,3 +54,7 @@
 - [ ] Gerar uma APK de validação após corrigir o ícone adaptativo
 - [x] Remover a configuração de ícone adaptativo e manter a logo completa no ícone convencional
 - [x] Replicar no ValidaEstoque o padrão de ícone aprovado no projeto NRD Lojas
+- [x] Ativar permissões, registro de dispositivo e preferências para notificações no aplicativo
+- [ ] Configurar entrega e agendamento de alertas de validade pelo Supabase
+- [ ] Validar notificações em APK de teste com dispositivo Android
+- [x] Preparar o registro de notificações para múltiplos aparelhos vinculados aos usuários autorizados
