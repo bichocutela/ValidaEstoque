@@ -42,6 +42,16 @@ function getSeed(): Snapshot {
   return { products: initialProducts, lots: initialLots, movements: initialMovements, notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES };
 }
 
+function isStoredSnapshot(value: unknown): value is Partial<Snapshot> {
+  if (!value || typeof value !== "object") return false;
+  const candidate = value as Partial<Snapshot>;
+  return Array.isArray(candidate.products) && Array.isArray(candidate.lots) && Array.isArray(candidate.movements);
+}
+
+function makeInventoryId(prefix: "p" | "l" | "m") {
+  return `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 export function InventoryProvider({ children }: PropsWithChildren) {
   const [snapshot, setSnapshot] = useState<Snapshot>(getSeed);
   const [isReady, setIsReady] = useState(false);
@@ -52,14 +62,17 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     AsyncStorage.getItem(STORAGE_KEY)
       .then((stored) => {
         if (!stored) return;
-        const parsed = JSON.parse(stored) as Partial<Snapshot>;
-        if (parsed.products?.length && parsed.lots && parsed.movements) {
+        try {
+          const parsed = JSON.parse(stored) as unknown;
+          if (!isStoredSnapshot(parsed) || !parsed.products?.length || !parsed.lots || !parsed.movements) return;
           setSnapshot({
             products: parsed.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })),
             lots: parsed.lots,
             movements: parsed.movements,
             notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...parsed.notificationPreferences },
           });
+        } catch {
+          // Dados locais inválidos não interrompem a abertura do aplicativo; a rotina inicia com a base segura.
         }
       })
       .catch(() => undefined)
@@ -88,12 +101,12 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     const normalizedName = input.product.name.trim().toLowerCase();
     const existing = snapshot.products.find((product) => product.barcode === input.product.barcode || (product.name.toLowerCase() === normalizedName && product.brand === input.product.brand));
     const product: InventoryProduct = existing ?? {
-      id: `p-${Date.now()}`,
+      id: makeInventoryId("p"),
       ...input.product,
       image: PRODUCT_IMAGES.assortment,
     };
     const lot: InventoryLot = {
-      id: `l-${Date.now()}`,
+      id: makeInventoryId("l"),
       productId: product.id,
       code: input.code.trim() || "SEM-LOTE",
       expiryDate: input.expiryDate,
@@ -103,21 +116,21 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       quality: input.quality,
       arrivalStatus: input.arrivalStatus,
     };
-    const movement: Movement = { id: `m-${Date.now()}`, lotId: lot.id, productId: product.id, type: "Recebido", quantity: lot.currentQuantity, date: new Date().toISOString(), employee: employeeName };
+    const movement: Movement = { id: makeInventoryId("m"), lotId: lot.id, productId: product.id, type: "Recebido", quantity: lot.currentQuantity, date: new Date().toISOString(), employee: employeeName };
     setSnapshot((current) => ({ ...current, products: existing ? current.products : [...current.products, product], lots: [lot, ...current.lots], movements: [movement, ...current.movements] }));
     const isCritical = input.arrivalStatus === "Validade crítica";
     return { lot, isCritical };
   }, [employeeName, snapshot.products]);
 
   const editLot = useCallback((lotId: string, updates: Partial<Pick<InventoryLot, "expiryDate" | "quality" | "arrivalStatus" | "currentQuantity">>) => {
-    setSnapshot((current) => ({ ...current, lots: current.lots.map((lot) => lot.id === lotId ? { ...lot, ...updates } : lot) }));
+    setSnapshot((current) => ({ ...current, lots: current.lots.map((lot) => lot.id === lotId ? { ...lot, ...updates, currentQuantity: updates.currentQuantity === undefined ? lot.currentQuantity : Math.max(0, updates.currentQuantity) } : lot) }));
   }, []);
 
   const confirmLot = useCallback((lotId: string) => {
     setSnapshot((current) => {
       const lot = current.lots.find((item) => item.id === lotId);
       if (!lot) return current;
-      const movement: Movement = { id: `m-${Date.now()}`, lotId, productId: lot.productId, type: "Conferido", quantity: 0, date: new Date().toISOString(), employee: employeeName };
+      const movement: Movement = { id: makeInventoryId("m"), lotId, productId: lot.productId, type: "Conferido", quantity: 0, date: new Date().toISOString(), employee: employeeName };
       return { ...current, movements: [movement, ...current.movements] };
     });
   }, [employeeName]);

@@ -34,3 +34,14 @@
 - [x] Configurar login temporário com usuário e senha admin/admin
 - [x] Revisar todos os botões e concluir ações interativas sem rotas mortas
 - [x] Criar testes de regressão para autenticação e fluxos dos controles principais
+- [x] Aplicar a logo do Supermercado Nordestão como ícone do launcher do aplicativo
+- [x] Corrigir todos os controles que aparentam ação, mas não executam comportamento funcional
+- [x] Auditar profundamente experiência, navegação, acessibilidade, dados, segurança e distribuição Android
+- [x] Implementar as correções prioritárias identificadas na auditoria profunda
+- [x] Documentar os achados, riscos e plano de evolução do ValidaEstoque
+- [ ] Processar e hospedar a logo do launcher no Supabase para liberar o checkpoint
+- [x] Verificar novas versões ao abrir a aba Mais e exibir atualização disponível abaixo de Configurações
+- [x] Baixar APK com progresso e encaminhar instalação pelo fluxo Android
+- [x] Replicar no ValidaEstoque o padrão completo de atualização interna aprovado pelo usuário
+- [x] Concluir a substituição do ícone do launcher antes do commit e push
+- [x] Confirmar a logo final recebida nos assets do launcher antes da sincronização

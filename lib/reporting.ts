@@ -21,6 +21,12 @@ function beginningOfDay(date: Date) {
   return result;
 }
 
+function endOfDay(date: Date) {
+  const result = new Date(date);
+  result.setHours(23, 59, 59, 999);
+  return result;
+}
+
 export function reportPeriodStart(period: ReportPeriod, now = new Date()) {
   const start = beginningOfDay(now);
   if (period === "Semana") start.setDate(start.getDate() - 6);
@@ -42,7 +48,11 @@ export function calculateReportSummary({
   now?: Date;
 }): ReportSummary {
   const start = reportPeriodStart(period, now);
-  const periodMovements = movements.filter((movement) => new Date(movement.date) >= start);
+  const end = endOfDay(now);
+  const periodMovements = movements.filter((movement) => {
+    const movementDate = new Date(movement.date);
+    return movementDate >= start && movementDate <= end;
+  });
   const losses = periodMovements.filter((movement) => LOSS_TYPES.has(movement.type));
   const spoiled = losses.filter((movement) => movement.type === "Estragado").reduce((sum, movement) => sum + movement.quantity, 0);
   const damaged = losses.filter((movement) => movement.type === "Avariado").reduce((sum, movement) => sum + movement.quantity, 0);

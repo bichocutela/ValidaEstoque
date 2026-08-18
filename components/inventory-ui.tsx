@@ -15,10 +15,12 @@ export function StatusPill({ lot }: { lot: InventoryLot }) {
   return <View style={[styles.pill, style]}><Text style={[styles.pillText, text]}>{days}</Text></View>;
 }
 
-export function MetricCard({ label, value, tone, icon }: { label: string; value: number; tone: "success" | "warning" | "critical" | "error"; icon: React.ComponentProps<typeof MaterialIcons>["name"] }) {
+export function MetricCard({ label, value, tone, icon, onPress }: { label: string; value: number; tone: "success" | "warning" | "critical" | "error"; icon: React.ComponentProps<typeof MaterialIcons>["name"]; onPress?: () => void }) {
   const box = tone === "success" ? styles.metricSuccess : tone === "warning" ? styles.metricWarning : tone === "critical" ? styles.metricCritical : styles.metricError;
   const iconColor = tone === "success" ? "#16794D" : tone === "warning" ? "#C98A00" : tone === "critical" ? "#D96816" : "#C73737";
-  return <View style={[styles.metric, box]}><MaterialIcons name={icon} size={20} color={iconColor} /><Text style={styles.metricValue}>{value}</Text><Text style={styles.metricLabel}>{label}</Text></View>;
+  const content = <><MaterialIcons name={icon} size={20} color={iconColor} /><Text style={styles.metricValue}>{value}</Text><Text style={styles.metricLabel}>{label}</Text></>;
+  if (!onPress) return <View style={[styles.metric, box]}>{content}</View>;
+  return <Pressable accessibilityRole="button" accessibilityLabel={`Ver ${label}`} onPress={onPress} style={({ pressed }) => [styles.metric, box, pressed && styles.pressed]}>{content}</Pressable>;
 }
 
 export function TapCard({ children, onPress, style }: { children: React.ReactNode; onPress: () => void; style?: object }) {

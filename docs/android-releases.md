@@ -45,6 +45,12 @@ Na aba **Actions**, selecione **Gerar APK Android** e clique em **Run workflow**
 
 Após a conclusão, abra a release criada, baixe o APK e instale-o no Android. Para atualizar, repita o processo com um `versionCode` maior; o Android oferecerá a atualização sem apagar os dados locais do aplicativo.
 
+## Atualização dentro do ValidaEstoque
+
+Ao abrir a aba **Mais**, o aplicativo consulta a release mais recente publicada no repositório. Quando encontra uma versão maior que a instalada, mostra um cartão de atualização logo abaixo de **Configurações**. O usuário pode iniciar o download, acompanhar o progresso e abrir o instalador Android sem procurar o arquivo em navegador ou gerenciador de arquivos.
+
+> A instalação final continua sob controle do Android. Depois do download, confirme a atualização na tela do sistema e, na primeira vez, autorize o **ValidaEstoque** a instalar aplicativos desconhecidos quando o Android solicitar.
+
 ## Diagnóstico rápido
 
 | Mensagem ou comportamento                | Causa provável                                                 | Correção                                                         |
@@ -52,7 +58,8 @@ Após a conclusão, abra a release criada, baixe o APK e instale-o no Android. P
 | O workflow informa segredo ausente       | Uma configuração obrigatória não foi cadastrada                | Revise os nomes e valores em **Secrets and variables → Actions** |
 | A release não é criada                   | Permissões de workflow somente leitura                         | Ative **Read and write permissions** em **Actions → General**    |
 | Android pede desinstalação               | Chave diferente, pacote diferente ou versionCode não crescente | Use a mesma chave, mantenha o pacote e aumente o versionCode     |
-| Erro ao instalar por bloqueio do sistema | Instalação de fontes desconhecidas não permitida               | Autorize o navegador/gerenciador de arquivos que abriu o APK     |
+| Erro ao instalar por bloqueio do sistema | Instalação de fontes desconhecidas não permitida               | Autorize o **ValidaEstoque** na tela de segurança exibida pelo Android |
+| Atualização não aparece em Mais          | A release atual não possui versão maior ou não tem um APK anexado | Gere uma release com `versionCode` e versão maiores, mantendo o APK anexado |
 
 ## Referências
 

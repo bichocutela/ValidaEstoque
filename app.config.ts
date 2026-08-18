@@ -31,7 +31,7 @@ const env = {
   appName: "ValidaEstoque",
   appSlug: "validade-estoque",
   logoUrl:
-    "https://files.manuscdn.com/user_upload_by_module/session_file/310519663678042974/mWLHRcyitYxIBQGe.png",
+    "https://files.manuscdn.com/user_upload_by_module/session_file/310519663678042974/PTmPggIynenKGXbz.png",
   scheme: schemeFromBundleId,
   iosBundleId: bundleId,
   androidPackage: bundleId,
@@ -69,7 +69,7 @@ const config: ExpoConfig = {
     edgeToEdgeEnabled: true,
     predictiveBackGestureEnabled: false,
     package: env.androidPackage,
-    permissions: ["POST_NOTIFICATIONS", "CAMERA"],
+    permissions: ["POST_NOTIFICATIONS", "CAMERA", "REQUEST_INSTALL_PACKAGES"],
     intentFilters: [
       {
         action: "VIEW",

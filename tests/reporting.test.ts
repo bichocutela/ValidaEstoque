@@ -25,4 +25,9 @@ describe("relatórios por período", () => {
     expect(calculateReportSummary({ lots, movements, getProduct, period: "Semana", now })).toMatchObject({ total: 5, expired: 3, damaged: 2, spoiled: 0, leader: "Iogurte", critical: 1 });
     expect(calculateReportSummary({ lots, movements, getProduct, period: "Mês", now })).toMatchObject({ total: 10, expired: 3, damaged: 2, spoiled: 5, leader: "Presunto", category: "Frios" });
   });
+
+  it("ignora registros futuros mesmo quando eles são perdas", () => {
+    const movementsWithFuture = [...movements, { id: "m-future", lotId: "l-1", productId: "p-1", type: "Vencido" as const, quantity: 99, date: "2026-08-19T09:00:00", employee: "Administrador" }];
+    expect(calculateReportSummary({ lots, movements: movementsWithFuture, getProduct, period: "Mês", now })).toMatchObject({ total: 10, expired: 3 });
+  });
 });
