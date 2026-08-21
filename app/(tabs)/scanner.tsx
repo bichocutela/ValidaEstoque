@@ -11,11 +11,11 @@ import { barcodesMatch, parseBarcode, type BarcodeDetails } from "@/lib/barcode-
 import { type ArrivalStatus, type InventoryLot, type InventoryProduct, type Quality } from "@/lib/inventory-data";
 import { useInventory } from "@/lib/inventory-context";
 import { isValidDateKey, parsePositiveWholeNumber } from "@/lib/inventory-validation";
+import { scannerToneSources } from "@/lib/scanner-sounds";
 
 const qualities: Quality[] = ["Bom estado", "Deteriorado", "Estragado", "Vencido"];
 const arrivalStatuses: ArrivalStatus[] = ["Normal", "Validade crítica", "Avariado"];
 const todayKey = () => new Date().toISOString().slice(0, 10);
-const scannerSuccessSound = require("@/assets/sounds/scanner-success.wav");
 type ScanResolution = { details: BarcodeDetails; product?: InventoryProduct; existingLot?: InventoryLot };
 
 export default function ScannerScreen() {
@@ -30,7 +30,9 @@ export default function ScannerScreen() {
   const [scanSuccess, setScanSuccess] = useState(false);
   const [resolution, setResolution] = useState<ScanResolution | null>(null);
   const [form, setForm] = useState({ name: "", brand: "", category: "", volume: "", barcode: "", expiryDate: "", code: "", quantity: "", receivedAt: todayKey(), arrivalStatus: "Normal" as ArrivalStatus, quality: "Bom estado" as Quality });
-  const successPlayer = useAudioPlayer(scannerSuccessSound);
+  const standardPlayer = useAudioPlayer(scannerToneSources.standard);
+  const crystalPlayer = useAudioPlayer(scannerToneSources.crystal);
+  const softPlayer = useAudioPlayer(scannerToneSources.soft);
   const successScale = useRef(new Animated.Value(0.72)).current;
   const successOpacity = useRef(new Animated.Value(0)).current;
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -45,8 +47,9 @@ export default function ScannerScreen() {
     successScale.setValue(0.72);
     successOpacity.setValue(0);
     if (notificationPreferences.scannerSoundEnabled) {
-      successPlayer.seekTo(0);
-      successPlayer.play();
+      const player = notificationPreferences.scannerTone === "crystal" ? crystalPlayer : notificationPreferences.scannerTone === "soft" ? softPlayer : standardPlayer;
+      player.seekTo(0);
+      player.play();
     }
     Animated.parallel([
       Animated.timing(successOpacity, { toValue: 1, duration: 110, useNativeDriver: true }),

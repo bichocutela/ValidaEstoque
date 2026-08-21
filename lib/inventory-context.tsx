@@ -4,6 +4,7 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import { accountEmailForRegistration, normalizeRegistrationNumber } from "@/lib/auth-rules";
 import { loadEmployeeProfile, loadRemoteInventory, recordEmployeeEvent, synchronizeInventory } from "@/lib/inventory-sync";
 import { supabase, type EmployeeProfile, type EmployeeRole } from "@/lib/supabase-client";
+import type { ScannerTone } from "@/lib/scanner-sounds";
 import {
   initialLots,
   initialMovements,
@@ -18,7 +19,7 @@ import {
   type Quality,
 } from "@/lib/inventory-data";
 
-export type NotificationPreferences = { enabled: boolean; sameDay: boolean; days: number; scannerSoundEnabled: boolean };
+export type NotificationPreferences = { enabled: boolean; sameDay: boolean; days: number; scannerSoundEnabled: boolean; scannerTone: ScannerTone };
 type Snapshot = { products: InventoryProduct[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: NotificationPreferences };
 type InventoryContextValue = Snapshot & {
   isReady: boolean;
@@ -40,7 +41,7 @@ type InventoryContextValue = Snapshot & {
 };
 
 const STORAGE_KEY = "validaestoque-v1";
-const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, sameDay: true, days: 5, scannerSoundEnabled: true };
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, sameDay: true, days: 5, scannerSoundEnabled: true, scannerTone: "standard" };
 const InventoryContext = createContext<InventoryContextValue | null>(null);
 const DEMO_PRODUCT_IDS = new Set(["p-apple", "p-bread", "p-cola", "p-ham", "p-milk", "p-yogurt"]);
 
@@ -109,7 +110,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       return { success: false, message: "Este acesso está suspenso. Procure a administração." };
     }
     const remoteSnapshot = await loadRemoteInventory();
-    if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled } }));
+    if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled, scannerTone: current.notificationPreferences.scannerTone } }));
     setEmployeeProfile(profile);
     setEmployeeName(profile.full_name);
     setSignedIn(true);
@@ -165,7 +166,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     if (!signedIn || !employeeProfile) return;
     const interval = setInterval(() => {
       void loadRemoteInventory().then((remoteSnapshot) => {
-        if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled } }));
+        if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled, scannerTone: current.notificationPreferences.scannerTone } }));
       }).catch(() => undefined);
     }, 20000);
     return () => clearInterval(interval);
