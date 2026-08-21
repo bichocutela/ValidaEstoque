@@ -95,3 +95,4 @@
 - [x] Notificar coletivamente produtos em situação crítica de validade
 - [x] Aplicar a antecedência escolhida aos avisos na tela e às notificações remotas
 - [x] Registrar no painel administrativo quem alterou a antecedência dos alertas e quando
+- [x] Confirmar e enviar o estado final do repositório ao GitHub
