@@ -42,6 +42,7 @@ type InventoryContextValue = Snapshot & {
 const STORAGE_KEY = "validaestoque-v1";
 const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, sameDay: true, days: 5 };
 const InventoryContext = createContext<InventoryContextValue | null>(null);
+const DEMO_PRODUCT_IDS = new Set(["p-apple", "p-bread", "p-cola", "p-ham", "p-milk", "p-yogurt"]);
 
 function getSeed(): Snapshot {
   return { products: initialProducts, lots: initialLots, movements: initialMovements, notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES };
@@ -51,6 +52,15 @@ function isStoredSnapshot(value: unknown): value is Partial<Snapshot> {
   if (!value || typeof value !== "object") return false;
   const candidate = value as Partial<Snapshot>;
   return Array.isArray(candidate.products) && Array.isArray(candidate.lots) && Array.isArray(candidate.movements);
+}
+
+function removeDemoRecords(snapshot: Snapshot): Snapshot {
+  const products = snapshot.products.filter((product) => !DEMO_PRODUCT_IDS.has(product.id));
+  const validProductIds = new Set(products.map((product) => product.id));
+  const lots = snapshot.lots.filter((lot) => validProductIds.has(lot.productId));
+  const validLotIds = new Set(lots.map((lot) => lot.id));
+  const movements = snapshot.movements.filter((movement) => validProductIds.has(movement.productId) && validLotIds.has(movement.lotId));
+  return { products, lots, movements, notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...snapshot.notificationPreferences } };
 }
 
 function makeInventoryId(prefix: "p" | "l" | "m") {
@@ -71,12 +81,13 @@ export function InventoryProvider({ children }: PropsWithChildren) {
         try {
           const parsed = JSON.parse(stored) as unknown;
           if (!isStoredSnapshot(parsed) || !parsed.products?.length || !parsed.lots || !parsed.movements) return;
-          setSnapshot({
+          const restored = removeDemoRecords({
             products: parsed.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })),
             lots: parsed.lots,
             movements: parsed.movements,
             notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...parsed.notificationPreferences },
           });
+          setSnapshot(restored);
         } catch {
           // Dados locais inválidos não interrompem a abertura do aplicativo; a rotina inicia com a base segura.
         }

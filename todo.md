@@ -69,6 +69,8 @@
 - [x] Criar área administrativa para visualizar funcionários, acessos, produtos cadastrados e movimentações por usuário
 - [x] Registrar horários de login e eventos operacionais por funcionário
 - [x] Sincronizar automaticamente produtos, lotes e movimentações com o Supabase
+- [x] Identificar produtos cadastrados e interpretar lote e validade quando disponíveis no código de barras
+- [x] Remover produtos, lotes e movimentações demonstrativos para iniciar a operação com dados reais
 - [x] Criar contas de funcionários no Supabase para substituir o login temporário
 - [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
 - [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações
