@@ -20,6 +20,8 @@ permissions:
 env:
   APP_VERSION: ${{ inputs.version_name || format('1.0.{0}', github.run_number) }}
   ANDROID_VERSION_CODE: ${{ inputs.version_code || github.run_number }}
+  EXPO_PUBLIC_SUPABASE_URL: https://kkayksyzksexoarpfxyj.supabase.co
+  EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: sb_publishable_8udpTBlsmrxMynShunVr3A_Xh-A9lGB
 
 jobs:
   build-release:
