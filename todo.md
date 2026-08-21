@@ -75,6 +75,8 @@
 - [x] Permitir ativar ou desativar o som de confirmação do leitor nas configurações
 - [x] Permitir escolher e testar diferentes tons de confirmação sonora do leitor
 - [x] Extrair lote, validade e quantidade de códigos GS1-128 compatíveis
+- [ ] Testar permissões, registro de aparelho e disparo de notificação de teste
+- [x] Sincronizar o token de cada aparelho autenticado na tabela remota de dispositivos
 - [x] Criar contas de funcionários no Supabase para substituir o login temporário
 - [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
 - [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações

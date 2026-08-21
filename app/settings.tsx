@@ -9,6 +9,7 @@ import { useInventory } from "@/lib/inventory-context";
 import {
   activateNotifications,
   getNotificationDeviceState,
+  registerNotificationDevice,
   sendNotificationTest,
   type NotificationDeviceState,
 } from "@/lib/notification-service";
@@ -18,7 +19,7 @@ const expiryWarningOptions = [3, 5, 10, 15];
 
 export default function SettingsScreen() {
   const router = useRouter();
-  const { notificationPreferences, updateNotificationPreferences } = useInventory();
+  const { employeeProfile, notificationPreferences, updateNotificationPreferences } = useInventory();
   const { enabled, sameDay, days, scannerSoundEnabled, scannerTone } = notificationPreferences;
   const [deviceState, setDeviceState] = useState<NotificationDeviceState | null>(null);
   const [isActivating, setIsActivating] = useState(false);
@@ -33,6 +34,10 @@ export default function SettingsScreen() {
 
   useEffect(() => { refreshDeviceState(); }, [refreshDeviceState]);
   useEffect(() => { void setAudioModeAsync({ playsInSilentMode: true }); }, []);
+  useEffect(() => {
+    if (!employeeProfile || !deviceState?.expoPushToken || deviceState.permission !== "granted") return;
+    void registerNotificationDevice(employeeProfile, deviceState.expoPushToken).catch(() => undefined);
+  }, [deviceState?.expoPushToken, deviceState?.permission, employeeProfile]);
 
   const handleNotificationToggle = async (value: boolean) => {
     if (!value) {
@@ -44,8 +49,9 @@ export default function SettingsScreen() {
       const state = await activateNotifications();
       setDeviceState(state);
       if (state.permission === "granted") {
+        if (employeeProfile && state.expoPushToken) await registerNotificationDevice(employeeProfile, state.expoPushToken);
         updateNotificationPreferences({ enabled: true });
-        Alert.alert("Notificações ativadas", "Este aparelho poderá receber os alertas do ValidaEstoque.");
+        Alert.alert("Notificações ativadas", state.expoPushToken ? "Este aparelho foi registrado para receber os alertas do ValidaEstoque." : "Alertas locais foram ativados. O registro remoto será retomado quando houver conexão com o serviço de push.");
       } else if (state.permission === "denied") {
         updateNotificationPreferences({ enabled: false });
         Alert.alert("Permissão necessária", "Autorize as notificações nas configurações do Android para receber os alertas.");

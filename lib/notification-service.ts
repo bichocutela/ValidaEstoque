@@ -3,6 +3,7 @@ import Constants from "expo-constants";
 import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
+import { supabase, type EmployeeProfile } from "@/lib/supabase-client";
 
 const NOTIFICATION_STATE_KEY = "validaestoque-notification-device-v1";
 const CHANNEL_ID = "validade-alertas";
@@ -82,15 +83,29 @@ export async function activateNotifications(): Promise<NotificationDeviceState> 
   if (state.permission !== "granted") return persistState(state);
 
   const projectId = Constants.expoConfig?.extra?.eas?.projectId ?? Constants.easConfig?.projectId;
-  if (projectId) {
-    try {
-      state.expoPushToken = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-    } catch {
-      // O consentimento continua válido mesmo quando o token remoto não puder ser obtido offline.
-    }
+  try {
+    state.expoPushToken = projectId
+      ? (await Notifications.getExpoPushTokenAsync({ projectId })).data
+      : (await Notifications.getExpoPushTokenAsync()).data;
+  } catch {
+    // O consentimento continua válido mesmo quando o token remoto não puder ser obtido offline.
   }
 
   return persistState(state);
+}
+
+export async function registerNotificationDevice(profile: EmployeeProfile, expoPushToken: string) {
+  if (Platform.OS !== "android" && Platform.OS !== "ios") return false;
+  const appVersion = Constants.nativeAppVersion ?? Constants.expoConfig?.version ?? null;
+  const { error } = await supabase.from("device_tokens").upsert({
+    user_id: profile.id,
+    expo_push_token: expoPushToken,
+    platform: Platform.OS,
+    app_version: appVersion,
+    last_seen_at: new Date().toISOString(),
+  }, { onConflict: "expo_push_token" });
+  if (error) throw error;
+  return true;
 }
 
 export async function sendNotificationTest() {
