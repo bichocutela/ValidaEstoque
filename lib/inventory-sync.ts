@@ -1,8 +1,9 @@
 import type { InventoryLot, InventoryProduct, Movement } from "@/lib/inventory-data";
+import { coerceAlertLeadDays, type AlertLeadDays } from "@/lib/inventory-data";
 import { supabase, type EmployeeProfile } from "@/lib/supabase-client";
 
 type SyncSnapshot = { products: InventoryProduct[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: { enabled: boolean; sameDay: boolean; days: number } };
-export type RemoteInventorySnapshot = { products: Omit<InventoryProduct, "image">[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: { enabled: boolean; sameDay: boolean; days: number } };
+export type RemoteInventorySnapshot = { products: Omit<InventoryProduct, "image">[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: { enabled: boolean; sameDay: boolean; days: number }; alertLeadDays: AlertLeadDays };
 
 const qualityMap = { "Bom estado": "bom_estado", Deteriorado: "deteriorado", Estragado: "estragado", Vencido: "vencido" } as const;
 const arrivalMap = { Normal: "normal", "Validade crítica": "validade_critica", Avariado: "avariado" } as const;
@@ -21,6 +22,11 @@ export async function recordEmployeeEvent(profile: EmployeeProfile, eventType: "
     const { error: loginError } = await supabase.from("employee_profiles").update({ last_login_at: new Date().toISOString() }).eq("id", profile.id);
     if (loginError) throw loginError;
   }
+}
+
+export async function updateStoreAlertSettings(profile: EmployeeProfile, alertLeadDays: AlertLeadDays) {
+  const { error } = await supabase.from("store_alert_settings").upsert({ store_id: profile.store_id, expiry_warning_days: alertLeadDays, updated_by: profile.id, updated_at: new Date().toISOString() });
+  if (error) throw error;
 }
 
 export async function deleteRemoteProduct(profile: EmployeeProfile, clientRef: string) {
@@ -45,13 +51,14 @@ export async function deleteRemoteProduct(profile: EmployeeProfile, clientRef: s
 }
 
 export async function loadRemoteInventory(): Promise<RemoteInventorySnapshot | null> {
-  const [productsResult, lotsResult, movementsResult, preferencesResult] = await Promise.all([
+  const [productsResult, lotsResult, movementsResult, preferencesResult, alertSettingsResult] = await Promise.all([
     supabase.from("inventory_products").select("id,client_ref,name,brand,category,volume,barcode,is_archived,archived_at").order("updated_at", { ascending: false }),
     supabase.from("inventory_lots").select("id,client_ref,product_id,code,expiry_date,received_at,initial_quantity,current_quantity,quality,arrival_status").order("updated_at", { ascending: false }),
     supabase.from("inventory_movements").select("id,client_ref,lot_id,product_id,movement_type,quantity,created_at,notes").order("created_at", { ascending: false }).limit(500),
     supabase.from("notification_preferences").select("enabled,warning_days,alert_on_expiry_day").limit(1).maybeSingle(),
+    supabase.from("store_alert_settings").select("expiry_warning_days").limit(1).maybeSingle(),
   ]);
-  if (productsResult.error || lotsResult.error || movementsResult.error || preferencesResult.error) return null;
+  if (productsResult.error || lotsResult.error || movementsResult.error || preferencesResult.error || alertSettingsResult.error) return null;
   const products = (productsResult.data ?? []).map((product) => ({ id: product.client_ref ?? `p-remote-${product.id}`, name: product.name, brand: product.brand ?? "", category: product.category ?? "", volume: product.volume ?? "", barcode: product.barcode ?? "", archived: product.is_archived ?? false, archivedAt: product.archived_at ?? undefined }));
   const productRefs = new Map(productsResult.data.map((product) => [product.id, product.client_ref ?? `p-remote-${product.id}`]));
   const lots = (lotsResult.data ?? []).flatMap((lot) => {
@@ -70,7 +77,7 @@ export async function loadRemoteInventory(): Promise<RemoteInventorySnapshot | n
     return [{ id: movement.client_ref ?? `m-remote-${movement.id}`, lotId, productId, type, quantity: movement.quantity, date: movement.created_at, employee: movement.notes?.replace("Registrado por ", "") || "Colaborador" } as Movement];
   });
   const preferences = preferencesResult.data;
-  return { products, lots, movements, notificationPreferences: { enabled: preferences?.enabled ?? true, days: preferences?.warning_days ?? 5, sameDay: preferences?.alert_on_expiry_day ?? true } };
+  return { products, lots, movements, notificationPreferences: { enabled: preferences?.enabled ?? true, days: preferences?.warning_days ?? 5, sameDay: preferences?.alert_on_expiry_day ?? true }, alertLeadDays: coerceAlertLeadDays(alertSettingsResult.data?.expiry_warning_days) };
 }
 
 export async function synchronizeInventory(profile: EmployeeProfile, snapshot: SyncSnapshot) {

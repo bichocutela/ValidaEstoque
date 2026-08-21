@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { daysUntil, formatDays, getLotTone } from "../lib/inventory-utils";
+import { coerceAlertLeadDays, daysUntil, formatDays, getLotTone } from "../lib/inventory-utils";
 
 const referenceDate = new Date(2026, 7, 15, 9, 0, 0);
 
@@ -21,7 +21,15 @@ describe("cálculos de validade", () => {
     expect(getLotTone({ expiryDate: "2026-08-13" }, referenceDate)).toBe("error");
     expect(getLotTone({ expiryDate: "2026-09-12", arrivalStatus: "Avariado" }, referenceDate)).toBe("error");
     expect(getLotTone({ expiryDate: "2026-08-18" }, referenceDate)).toBe("critical");
-    expect(getLotTone({ expiryDate: "2026-08-24" }, referenceDate)).toBe("warning");
+    expect(getLotTone({ expiryDate: "2026-08-24" }, referenceDate)).toBe("success");
     expect(getLotTone({ expiryDate: "2026-09-12" }, referenceDate)).toBe("success");
+  });
+
+  it("usa a antecedência administrativa para avisos e mantém três dias como faixa crítica", () => {
+    expect(getLotTone({ expiryDate: "2026-08-22" }, referenceDate, 3)).toBe("success");
+    expect(getLotTone({ expiryDate: "2026-08-22" }, referenceDate, 7)).toBe("warning");
+    expect(getLotTone({ expiryDate: "2026-08-18" }, referenceDate, 30)).toBe("critical");
+    expect(coerceAlertLeadDays(15)).toBe(15);
+    expect(coerceAlertLeadDays(9)).toBe(5);
   });
 });

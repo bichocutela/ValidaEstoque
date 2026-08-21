@@ -91,3 +91,6 @@
 - [x] Confirmar e enviar todas as alterações acumuladas ao GitHub
 - [x] Configurar alertas remotos de validade no Supabase para aparelhos autorizados
 - [x] Entregar alertas de vencimento a todos os aparelhos autorizados da mesma loja
+- [x] Permitir que o administrador defina os dias de antecedência dos alertas de vencimento
+- [x] Notificar coletivamente produtos em situação crítica de validade
+- [x] Aplicar a antecedência escolhida aos avisos na tela e às notificações remotas

@@ -11,7 +11,7 @@ import { useInventory } from "@/lib/inventory-context";
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { signedIn, isReady, employeeName, lots, getProduct } = useInventory();
+  const { signedIn, isReady, employeeName, lots, getProduct, alertLeadDays } = useInventory();
   const [refreshing, setRefreshing] = useState(false);
   if (!isReady) return <ScreenContainer className="p-6" containerClassName="bg-background"><View style={styles.loading}><ActivityIndicator size="large" color="#0B5D52" /><Text style={styles.loadingText}>Preparando o estoque...</Text></View></ScreenContainer>;
   if (!signedIn) return <LoginScreen />;
@@ -19,9 +19,9 @@ export default function HomeScreen() {
   const liveLots = lots.filter((lot) => lot.currentQuantity > 0);
   const expired = liveLots.filter((lot) => daysUntil(lot.expiryDate) < 0 || lot.quality === "Vencido" || lot.quality === "Estragado");
   const damaged = liveLots.filter((lot) => lot.quality === "Deteriorado" || lot.arrivalStatus === "Avariado");
-  const critical = liveLots.filter((lot) => { const days = daysUntil(lot.expiryDate); return days >= 0 && days <= 5 && getLotTone(lot) !== "error"; });
-  const normal = liveLots.filter((lot) => getLotTone(lot) === "success");
-  const attention = [...liveLots].filter((lot) => getLotTone(lot) !== "success").sort((a, b) => daysUntil(a.expiryDate) - daysUntil(b.expiryDate)).slice(0, 5);
+  const critical = liveLots.filter((lot) => { const days = daysUntil(lot.expiryDate); return days >= 0 && days <= alertLeadDays && getLotTone(lot, new Date(), alertLeadDays) !== "error"; });
+  const normal = liveLots.filter((lot) => getLotTone(lot, new Date(), alertLeadDays) === "success");
+  const attention = [...liveLots].filter((lot) => getLotTone(lot, new Date(), alertLeadDays) !== "success").sort((a, b) => daysUntil(a.expiryDate) - daysUntil(b.expiryDate)).slice(0, 5);
   const refresh = () => { setRefreshing(true); setTimeout(() => setRefreshing(false), 550); };
 
   return <ScreenContainer className="px-5" containerClassName="bg-background">
@@ -34,7 +34,7 @@ export default function HomeScreen() {
       ListHeaderComponent={<>
         <View style={styles.header}><View><Text style={styles.overline}>ROTINA DE HOJE</Text><Text style={styles.greeting}>Olá, {employeeName.split(" ")[0]}</Text><Text style={styles.headerHelper}>O estoque precisa da sua atenção.</Text></View><View style={styles.avatar}><Text style={styles.avatarText}>{employeeName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</Text></View></View>
         <View style={styles.summaryTitle}><Text style={styles.sectionTitle}>Visão geral</Text><Text style={styles.date}>15 AGO</Text></View>
-        <View style={styles.metrics}><MetricCard label="Produtos OK" value={normal.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="success" icon="verified" onPress={() => router.push("/(tabs)/products")} /><MetricCard label="Próximos do vencimento" value={critical.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="critical" icon="schedule" onPress={() => router.push("/(tabs)/expiry")} /><MetricCard label="Vencidos" value={expired.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="error" icon="event-busy" onPress={() => router.push("/(tabs)/expiry")} /><MetricCard label="Avariados" value={damaged.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="warning" icon="report-problem" onPress={() => router.push("/(tabs)/expiry")} /></View>
+        <View style={styles.metrics}><MetricCard label="Produtos OK" value={normal.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="success" icon="verified" onPress={() => router.push("/(tabs)/products")} /><MetricCard label={`Alerta até ${alertLeadDays} dias`} value={critical.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="critical" icon="schedule" onPress={() => router.push("/(tabs)/expiry")} /><MetricCard label="Vencidos" value={expired.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="error" icon="event-busy" onPress={() => router.push("/(tabs)/expiry")} /><MetricCard label="Avariados" value={damaged.reduce((sum, lot) => sum + lot.currentQuantity, 0)} tone="warning" icon="report-problem" onPress={() => router.push("/(tabs)/expiry")} /></View>
         <Text style={[styles.sectionTitle, styles.quickTitle]}>Acesso rápido</Text>
         <View style={styles.shortcuts}>
           <QuickAction icon="qr-code-scanner" label="Escanear" color="#0B5D52" onPress={() => router.push("/(tabs)/scanner")} />
@@ -42,9 +42,9 @@ export default function HomeScreen() {
           <QuickAction icon="inventory-2" label="Produtos" color="#C98A00" onPress={() => router.push("/(tabs)/products")} />
           <QuickAction icon="event-note" label="Validades" color="#D96816" onPress={() => router.push("/(tabs)/expiry")} />
         </View>
-        <View style={styles.attentionHeading}><View><Text style={styles.sectionTitle}>Atenção necessária</Text><Text style={styles.sectionHelper}>Prioridade por validade e qualidade</Text></View><Pressable onPress={() => router.push("/(tabs)/expiry")} style={({ pressed }) => pressed && styles.pressed}><Text style={styles.link}>Ver todos</Text></Pressable></View>
+        <View style={styles.attentionHeading}><View><Text style={styles.sectionTitle}>Atenção necessária</Text><Text style={styles.sectionHelper}>Alertas ativos até {alertLeadDays} dias por validade e qualidade</Text></View><Pressable onPress={() => router.push("/(tabs)/expiry")} style={({ pressed }) => pressed && styles.pressed}><Text style={styles.link}>Ver todos</Text></Pressable></View>
       </>}
-      renderItem={({ item }) => { const product = getProduct(item.productId); if (!product) return null; return <TapCard onPress={() => router.push({ pathname: "/lot/[id]", params: { id: item.id } })} style={styles.attentionCard}><View style={[styles.statusRail, { backgroundColor: getLotTone(item) === "error" ? "#C73737" : getLotTone(item) === "critical" ? "#D96816" : "#C98A00" }]} /><ProductThumb source={product.image} /><View style={styles.cardContent}><View style={styles.cardTop}><Text style={styles.cardName} numberOfLines={1}>{product.name}</Text><StatusPill lot={item} /></View><Text style={styles.cardMeta}>{product.brand} · Lote {item.code}</Text><Text style={styles.cardQuantity}>{item.currentQuantity} unidades</Text></View><MaterialIcons name="chevron-right" size={22} color="#92A09C" /></TapCard>; }}
+      renderItem={({ item }) => { const product = getProduct(item.productId); const tone = getLotTone(item, new Date(), alertLeadDays); if (!product) return null; return <TapCard onPress={() => router.push({ pathname: "/lot/[id]", params: { id: item.id } })} style={styles.attentionCard}><View style={[styles.statusRail, { backgroundColor: tone === "error" ? "#C73737" : tone === "critical" ? "#D96816" : "#C98A00" }]} /><ProductThumb source={product.image} /><View style={styles.cardContent}><View style={styles.cardTop}><Text style={styles.cardName} numberOfLines={1}>{product.name}</Text><StatusPill lot={item} alertLeadDays={alertLeadDays} /></View><Text style={styles.cardMeta}>{product.brand} · Lote {item.code}</Text><Text style={styles.cardQuantity}>{item.currentQuantity} unidades</Text></View><MaterialIcons name="chevron-right" size={22} color="#92A09C" /></TapCard>; }}
       ListEmptyComponent={<View style={styles.empty}><MaterialIcons name="task-alt" size={32} color="#16794D" /><Text style={styles.emptyTitle}>Tudo sob controle</Text><Text style={styles.emptyText}>Não há lotes com prioridade agora.</Text></View>}
     />
   </ScreenContainer>;

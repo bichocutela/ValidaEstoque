@@ -1,7 +1,8 @@
 import type { ImageSourcePropType } from "react-native";
-import { dateFromKey, daysUntil, formatDate, formatDays, getLotTone } from "@/lib/inventory-utils";
+import { ALERT_LEAD_DAY_OPTIONS, coerceAlertLeadDays, dateFromKey, daysUntil, formatDate, formatDays, getLotTone, type AlertLeadDays } from "@/lib/inventory-utils";
 
-export { dateFromKey, daysUntil, formatDate, formatDays, getLotTone };
+export { ALERT_LEAD_DAY_OPTIONS, coerceAlertLeadDays, dateFromKey, daysUntil, formatDate, formatDays, getLotTone };
+export type { AlertLeadDays };
 
 export type Quality = "Bom estado" | "Deteriorado" | "Estragado" | "Vencido";
 export type ArrivalStatus = "Normal" | "Validade crítica" | "Avariado";

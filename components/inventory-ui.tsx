@@ -1,14 +1,14 @@
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { Image, Pressable, StyleSheet, Text, View, type ImageSourcePropType } from "react-native";
 
-import { daysUntil, formatDays, getLotTone, type InventoryLot } from "@/lib/inventory-data";
+import { daysUntil, formatDays, getLotTone, type AlertLeadDays, type InventoryLot } from "@/lib/inventory-data";
 
 export function ProductThumb({ source, size = "small" }: { source: ImageSourcePropType; size?: "small" | "large" }) {
   return <Image source={source} style={size === "large" ? styles.thumbLarge : styles.thumbSmall} resizeMode="cover" />;
 }
 
-export function StatusPill({ lot }: { lot: InventoryLot }) {
-  const tone = getLotTone(lot);
+export function StatusPill({ lot, alertLeadDays }: { lot: InventoryLot; alertLeadDays?: AlertLeadDays }) {
+  const tone = getLotTone(lot, new Date(), alertLeadDays);
   const days = formatDays(daysUntil(lot.expiryDate));
   const style = tone === "success" ? styles.pillSuccess : tone === "warning" ? styles.pillWarning : tone === "critical" ? styles.pillCritical : styles.pillError;
   const text = tone === "success" ? styles.pillTextSuccess : tone === "warning" ? styles.pillTextWarning : tone === "critical" ? styles.pillTextCritical : styles.pillTextError;

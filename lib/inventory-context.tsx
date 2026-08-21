@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
 import { accountEmailForRegistration, normalizeRegistrationNumber } from "@/lib/auth-rules";
-import { deleteRemoteProduct, loadEmployeeProfile, loadRemoteInventory, recordEmployeeEvent, synchronizeInventory } from "@/lib/inventory-sync";
+import { deleteRemoteProduct, loadEmployeeProfile, loadRemoteInventory, recordEmployeeEvent, synchronizeInventory, updateStoreAlertSettings } from "@/lib/inventory-sync";
 import { supabase, type EmployeeProfile, type EmployeeRole } from "@/lib/supabase-client";
 import type { ScannerTone } from "@/lib/scanner-sounds";
 import { canManageProducts } from "@/lib/product-management";
@@ -18,10 +18,12 @@ import {
   type MovementType,
   type NewLotInput,
   type Quality,
+  coerceAlertLeadDays,
+  type AlertLeadDays,
 } from "@/lib/inventory-data";
 
 export type NotificationPreferences = { enabled: boolean; sameDay: boolean; days: number; scannerSoundEnabled: boolean; scannerTone: ScannerTone };
-type Snapshot = { products: InventoryProduct[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: NotificationPreferences };
+type Snapshot = { products: InventoryProduct[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: NotificationPreferences; alertLeadDays: AlertLeadDays };
 type InventoryContextValue = Snapshot & {
   isReady: boolean;
   signedIn: boolean;
@@ -43,6 +45,7 @@ type InventoryContextValue = Snapshot & {
   confirmLot: (lotId: string) => void;
   createMovement: (lotId: string, type: MovementType, quantity: number) => void;
   updateNotificationPreferences: (updates: Partial<NotificationPreferences>) => void;
+  updateStoreAlertLeadDays: (alertLeadDays: AlertLeadDays) => Promise<{ success: boolean; message?: string }>;
 };
 
 const STORAGE_KEY = "validaestoque-v1";
@@ -51,7 +54,7 @@ const InventoryContext = createContext<InventoryContextValue | null>(null);
 const DEMO_PRODUCT_IDS = new Set(["p-apple", "p-bread", "p-cola", "p-ham", "p-milk", "p-yogurt"]);
 
 function getSeed(): Snapshot {
-  return { products: initialProducts, lots: initialLots, movements: initialMovements, notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES };
+  return { products: initialProducts, lots: initialLots, movements: initialMovements, notificationPreferences: DEFAULT_NOTIFICATION_PREFERENCES, alertLeadDays: 5 };
 }
 
 function isStoredSnapshot(value: unknown): value is Partial<Snapshot> {
@@ -66,7 +69,7 @@ function removeDemoRecords(snapshot: Snapshot): Snapshot {
   const lots = snapshot.lots.filter((lot) => validProductIds.has(lot.productId));
   const validLotIds = new Set(lots.map((lot) => lot.id));
   const movements = snapshot.movements.filter((movement) => validProductIds.has(movement.productId) && validLotIds.has(movement.lotId));
-  return { products, lots, movements, notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...snapshot.notificationPreferences } };
+  return { products, lots, movements, notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...snapshot.notificationPreferences }, alertLeadDays: coerceAlertLeadDays(snapshot.alertLeadDays) };
 }
 
 function makeInventoryId(prefix: "p" | "l" | "m") {
@@ -92,6 +95,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
             lots: parsed.lots,
             movements: parsed.movements,
             notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...parsed.notificationPreferences },
+            alertLeadDays: coerceAlertLeadDays(parsed.alertLeadDays),
           });
           setSnapshot(restored);
         } catch {
@@ -290,7 +294,18 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     setSnapshot((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, ...updates } }));
   }, []);
 
-  const value = useMemo(() => ({ ...snapshot, isReady, signedIn, employeeName, employeeRole: employeeProfile?.role ?? null, employeeProfile, signIn, registerEmployee, signOut, getProduct, getLot, lotsForProduct, updateProduct, deleteProduct, archiveProduct, restoreProduct, addLot, editLot, confirmLot, createMovement, updateNotificationPreferences }), [addLot, archiveProduct, confirmLot, createMovement, deleteProduct, editLot, employeeName, employeeProfile, getLot, getProduct, isReady, lotsForProduct, registerEmployee, restoreProduct, signIn, signOut, signedIn, snapshot, updateNotificationPreferences, updateProduct]);
+  const updateStoreAlertLeadDays = useCallback(async (alertLeadDays: AlertLeadDays) => {
+    if (employeeProfile?.role !== "admin") return { success: false, message: "Somente o administrador pode alterar a antecedência dos alertas." };
+    try {
+      await updateStoreAlertSettings(employeeProfile, alertLeadDays);
+      setSnapshot((current) => ({ ...current, alertLeadDays }));
+      return { success: true };
+    } catch {
+      return { success: false, message: "Não foi possível atualizar os alertas agora. Tente novamente." };
+    }
+  }, [employeeProfile]);
+
+  const value = useMemo(() => ({ ...snapshot, isReady, signedIn, employeeName, employeeRole: employeeProfile?.role ?? null, employeeProfile, signIn, registerEmployee, signOut, getProduct, getLot, lotsForProduct, updateProduct, deleteProduct, archiveProduct, restoreProduct, addLot, editLot, confirmLot, createMovement, updateNotificationPreferences, updateStoreAlertLeadDays }), [addLot, archiveProduct, confirmLot, createMovement, deleteProduct, editLot, employeeName, employeeProfile, getLot, getProduct, isReady, lotsForProduct, registerEmployee, restoreProduct, signIn, signOut, signedIn, snapshot, updateNotificationPreferences, updateProduct, updateStoreAlertLeadDays]);
   return <InventoryContext.Provider value={value}>{children}</InventoryContext.Provider>;
 }
 
