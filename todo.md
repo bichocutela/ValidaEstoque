@@ -94,3 +94,4 @@
 - [x] Permitir que o administrador defina os dias de antecedência dos alertas de vencimento
 - [x] Notificar coletivamente produtos em situação crítica de validade
 - [x] Aplicar a antecedência escolhida aos avisos na tela e às notificações remotas
+- [x] Registrar no painel administrativo quem alterou a antecedência dos alertas e quando
