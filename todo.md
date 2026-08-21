@@ -88,3 +88,4 @@
 - [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
 - [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações
 - [x] Adicionar filtro de movimentações por produto na interface do histórico
+- [x] Confirmar e enviar todas as alterações acumuladas ao GitHub
