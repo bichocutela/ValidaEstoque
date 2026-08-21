@@ -46,14 +46,13 @@ export async function deleteRemoteProduct(profile: EmployeeProfile, clientRef: s
 
 export async function loadRemoteInventory(): Promise<RemoteInventorySnapshot | null> {
   const [productsResult, lotsResult, movementsResult, preferencesResult] = await Promise.all([
-    supabase.from("inventory_products").select("id,client_ref,name,brand,category,volume,barcode").order("updated_at", { ascending: false }),
+    supabase.from("inventory_products").select("id,client_ref,name,brand,category,volume,barcode,is_archived,archived_at").order("updated_at", { ascending: false }),
     supabase.from("inventory_lots").select("id,client_ref,product_id,code,expiry_date,received_at,initial_quantity,current_quantity,quality,arrival_status").order("updated_at", { ascending: false }),
     supabase.from("inventory_movements").select("id,client_ref,lot_id,product_id,movement_type,quantity,created_at,notes").order("created_at", { ascending: false }).limit(500),
     supabase.from("notification_preferences").select("enabled,warning_days,alert_on_expiry_day").limit(1).maybeSingle(),
   ]);
   if (productsResult.error || lotsResult.error || movementsResult.error || preferencesResult.error) return null;
-  if (!(productsResult.data?.length)) return null;
-  const products = productsResult.data.map((product) => ({ id: product.client_ref ?? `p-remote-${product.id}`, name: product.name, brand: product.brand ?? "", category: product.category ?? "", volume: product.volume ?? "", barcode: product.barcode ?? "" }));
+  const products = (productsResult.data ?? []).map((product) => ({ id: product.client_ref ?? `p-remote-${product.id}`, name: product.name, brand: product.brand ?? "", category: product.category ?? "", volume: product.volume ?? "", barcode: product.barcode ?? "", archived: product.is_archived ?? false, archivedAt: product.archived_at ?? undefined }));
   const productRefs = new Map(productsResult.data.map((product) => [product.id, product.client_ref ?? `p-remote-${product.id}`]));
   const lots = (lotsResult.data ?? []).flatMap((lot) => {
     const productId = productRefs.get(lot.product_id);
@@ -76,7 +75,7 @@ export async function loadRemoteInventory(): Promise<RemoteInventorySnapshot | n
 
 export async function synchronizeInventory(profile: EmployeeProfile, snapshot: SyncSnapshot) {
   const productsPayload = snapshot.products.map((product) => ({
-    owner_id: profile.id, store_id: profile.store_id, client_ref: product.id, name: product.name, brand: product.brand || null, category: product.category || null, volume: product.volume || null, barcode: product.barcode || null, created_by: profile.id, updated_by: profile.id,
+    owner_id: profile.id, store_id: profile.store_id, client_ref: product.id, name: product.name, brand: product.brand || null, category: product.category || null, volume: product.volume || null, barcode: product.barcode || null, is_archived: product.archived, archived_at: product.archived ? product.archivedAt ?? new Date().toISOString() : null, archived_by: product.archived ? profile.id : null, created_by: profile.id, updated_by: profile.id,
   }));
   const productsResult = await supabase.from("inventory_products").upsert(productsPayload, { onConflict: "store_id,client_ref" }).select("id,client_ref");
   if (productsResult.error) throw productsResult.error;

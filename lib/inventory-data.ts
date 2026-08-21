@@ -14,6 +14,8 @@ export type InventoryProduct = {
   category: string;
   volume: string;
   barcode: string;
+  archived?: boolean;
+  archivedAt?: string;
   image: ImageSourcePropType;
 };
 
@@ -40,7 +42,7 @@ export type Movement = {
 };
 
 export type NewLotInput = Omit<InventoryLot, "id" | "productId"> & {
-  product: Omit<InventoryProduct, "id" | "image">;
+  product: Omit<InventoryProduct, "id" | "image" | "archived" | "archivedAt">;
   photoUri?: string;
 };
 

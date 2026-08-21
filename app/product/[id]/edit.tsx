@@ -24,7 +24,7 @@ export default function EditProductScreen() {
   const update = (field: keyof ProductForm, value: string) => setForm((current) => ({ ...current, [field]: value }));
   const save = () => {
     if (!form.name.trim()) { Alert.alert("Nome obrigatório", "Informe o nome do produto antes de salvar."); return; }
-    updateProduct(product.id, { name: form.name.trim(), brand: form.brand.trim(), category: form.category.trim(), volume: form.volume.trim(), barcode: form.barcode.trim() });
+    if (!updateProduct(product.id, { name: form.name.trim(), brand: form.brand.trim(), category: form.category.trim(), volume: form.volume.trim(), barcode: form.barcode.trim() })) { Alert.alert("Acesso restrito", "Somente perfis de gestão podem editar produtos."); return; }
     Alert.alert("Produto atualizado", "As informações do produto foram salvas.", [{ text: "Concluir", onPress: () => router.back() }]);
   };
 

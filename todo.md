@@ -79,6 +79,11 @@
 - [x] Sincronizar o token de cada aparelho autenticado na tabela remota de dispositivos
 - [ ] Registrar tokens nativos FCM e enviar alertas remotos pelo Firebase
 - [x] Adicionar menu de ações por produto com edição, exclusão confirmada e atalhos operacionais
+- [x] Permitir arquivar e restaurar produtos sem excluir o histórico operacional
+- [x] Adicionar filtros de itens ativos e arquivados ao catálogo de produtos
+- [x] Manter o inventário remoto vazio sincronizado sem restaurar dados locais antigos
+- [x] Prevenir duplicidade de lote por produto com confirmação explícita na rotina de recebimento
+- [x] Auditar fluxos críticos e responsividade em telas móveis antes do commit final
 - [x] Criar contas de funcionários no Supabase para substituir o login temporário
 - [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
 - [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações

@@ -5,6 +5,7 @@ import { accountEmailForRegistration, normalizeRegistrationNumber } from "@/lib/
 import { deleteRemoteProduct, loadEmployeeProfile, loadRemoteInventory, recordEmployeeEvent, synchronizeInventory } from "@/lib/inventory-sync";
 import { supabase, type EmployeeProfile, type EmployeeRole } from "@/lib/supabase-client";
 import type { ScannerTone } from "@/lib/scanner-sounds";
+import { canManageProducts } from "@/lib/product-management";
 import {
   initialLots,
   initialMovements,
@@ -33,8 +34,10 @@ type InventoryContextValue = Snapshot & {
   getProduct: (id: string) => InventoryProduct | undefined;
   getLot: (id: string) => InventoryLot | undefined;
   lotsForProduct: (productId: string) => InventoryLot[];
-  updateProduct: (productId: string, updates: Pick<InventoryProduct, "name" | "brand" | "category" | "volume" | "barcode">) => void;
+  updateProduct: (productId: string, updates: Pick<InventoryProduct, "name" | "brand" | "category" | "volume" | "barcode">) => boolean;
   deleteProduct: (productId: string) => Promise<{ success: boolean; message?: string }>;
+  archiveProduct: (productId: string) => Promise<{ success: boolean; message?: string }>;
+  restoreProduct: (productId: string) => Promise<{ success: boolean; message?: string }>;
   addLot: (input: NewLotInput) => { lot: InventoryLot; isCritical: boolean };
   editLot: (lotId: string, updates: Partial<Pick<InventoryLot, "expiryDate" | "quality" | "arrivalStatus" | "currentQuantity">>) => void;
   confirmLot: (lotId: string) => void;
@@ -83,9 +86,9 @@ export function InventoryProvider({ children }: PropsWithChildren) {
         if (!stored) return;
         try {
           const parsed = JSON.parse(stored) as unknown;
-          if (!isStoredSnapshot(parsed) || !parsed.products?.length || !parsed.lots || !parsed.movements) return;
+          if (!isStoredSnapshot(parsed) || !parsed.lots || !parsed.movements) return;
           const restored = removeDemoRecords({
-            products: parsed.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })),
+            products: (parsed.products ?? []).map((product) => ({ ...product, archived: product.archived ?? false, image: PRODUCT_IMAGES.assortment })),
             lots: parsed.lots,
             movements: parsed.movements,
             notificationPreferences: { ...DEFAULT_NOTIFICATION_PREFERENCES, ...parsed.notificationPreferences },
@@ -112,7 +115,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       return { success: false, message: "Este acesso está suspenso. Procure a administração." };
     }
     const remoteSnapshot = await loadRemoteInventory();
-    if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled, scannerTone: current.notificationPreferences.scannerTone } }));
+    if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, archived: product.archived ?? false, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled, scannerTone: current.notificationPreferences.scannerTone } }));
     setEmployeeProfile(profile);
     setEmployeeName(profile.full_name);
     setSignedIn(true);
@@ -168,7 +171,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     if (!signedIn || !employeeProfile) return;
     const interval = setInterval(() => {
       void loadRemoteInventory().then((remoteSnapshot) => {
-        if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled, scannerTone: current.notificationPreferences.scannerTone } }));
+        if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, archived: product.archived ?? false, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled, scannerTone: current.notificationPreferences.scannerTone } }));
       }).catch(() => undefined);
     }, 20000);
     return () => clearInterval(interval);
@@ -178,11 +181,31 @@ export function InventoryProvider({ children }: PropsWithChildren) {
   const getLot = useCallback((id: string) => snapshot.lots.find((lot) => lot.id === id), [snapshot.lots]);
   const lotsForProduct = useCallback((productId: string) => snapshot.lots.filter((lot) => lot.productId === productId), [snapshot.lots]);
 
+  const canManageProductCatalog = canManageProducts(employeeProfile?.role ?? null);
   const updateProduct = useCallback((productId: string, updates: Pick<InventoryProduct, "name" | "brand" | "category" | "volume" | "barcode">) => {
+    if (!canManageProductCatalog) return false;
     setSnapshot((current) => ({ ...current, products: current.products.map((product) => product.id === productId ? { ...product, ...updates } : product) }));
-  }, []);
+    return true;
+  }, [canManageProductCatalog]);
+
+  const archiveProduct = useCallback(async (productId: string) => {
+    if (!canManageProductCatalog) return { success: false, message: "Somente perfis de gestão podem arquivar produtos." };
+    const exists = snapshot.products.some((product) => product.id === productId);
+    if (!exists) return { success: false, message: "Produto não encontrado." };
+    setSnapshot((current) => ({ ...current, products: current.products.map((product) => product.id === productId ? { ...product, archived: true, archivedAt: new Date().toISOString() } : product) }));
+    return { success: true };
+  }, [canManageProductCatalog, snapshot.products]);
+
+  const restoreProduct = useCallback(async (productId: string) => {
+    if (!canManageProductCatalog) return { success: false, message: "Somente perfis de gestão podem restaurar produtos." };
+    const exists = snapshot.products.some((product) => product.id === productId);
+    if (!exists) return { success: false, message: "Produto não encontrado." };
+    setSnapshot((current) => ({ ...current, products: current.products.map((product) => product.id === productId ? { ...product, archived: false, archivedAt: undefined } : product) }));
+    return { success: true };
+  }, [canManageProductCatalog, snapshot.products]);
 
   const deleteProduct = useCallback(async (productId: string) => {
+    if (!canManageProductCatalog) return { success: false, message: "Somente perfis de gestão podem excluir produtos." };
     const product = snapshot.products.find((item) => item.id === productId);
     if (!product) return { success: false, message: "Produto não encontrado." };
     try {
@@ -201,7 +224,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     } catch {
       return { success: false, message: "Não foi possível excluir este produto agora. Verifique sua conexão e tente novamente." };
     }
-  }, [employeeProfile, snapshot.products]);
+  }, [canManageProductCatalog, employeeProfile, snapshot.products]);
 
   const addLot = useCallback((input: NewLotInput) => {
     const normalizedName = input.product.name.trim().toLowerCase();
@@ -209,6 +232,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     const product: InventoryProduct = existing ?? {
       id: makeInventoryId("p"),
       ...input.product,
+      archived: false,
       image: PRODUCT_IMAGES.assortment,
     };
     const lot: InventoryLot = {
@@ -223,7 +247,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       arrivalStatus: input.arrivalStatus,
     };
     const movement: Movement = { id: makeInventoryId("m"), lotId: lot.id, productId: product.id, type: "Recebido", quantity: lot.currentQuantity, date: new Date().toISOString(), employee: employeeName };
-    setSnapshot((current) => ({ ...current, products: existing ? current.products : [...current.products, product], lots: [lot, ...current.lots], movements: [movement, ...current.movements] }));
+    setSnapshot((current) => ({ ...current, products: existing ? current.products.map((item) => item.id === existing.id ? { ...item, archived: false, archivedAt: undefined } : item) : [...current.products, product], lots: [lot, ...current.lots], movements: [movement, ...current.movements] }));
     if (employeeProfile) {
       if (!existing) void recordEmployeeEvent(employeeProfile, "product_created", "product", product.id).catch(() => undefined);
       void recordEmployeeEvent(employeeProfile, "lot_created", "lot", lot.id).catch(() => undefined);
@@ -266,7 +290,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     setSnapshot((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, ...updates } }));
   }, []);
 
-  const value = useMemo(() => ({ ...snapshot, isReady, signedIn, employeeName, employeeRole: employeeProfile?.role ?? null, employeeProfile, signIn, registerEmployee, signOut, getProduct, getLot, lotsForProduct, updateProduct, deleteProduct, addLot, editLot, confirmLot, createMovement, updateNotificationPreferences }), [addLot, confirmLot, createMovement, deleteProduct, editLot, employeeName, employeeProfile, getLot, getProduct, isReady, lotsForProduct, registerEmployee, signIn, signOut, signedIn, snapshot, updateNotificationPreferences, updateProduct]);
+  const value = useMemo(() => ({ ...snapshot, isReady, signedIn, employeeName, employeeRole: employeeProfile?.role ?? null, employeeProfile, signIn, registerEmployee, signOut, getProduct, getLot, lotsForProduct, updateProduct, deleteProduct, archiveProduct, restoreProduct, addLot, editLot, confirmLot, createMovement, updateNotificationPreferences }), [addLot, archiveProduct, confirmLot, createMovement, deleteProduct, editLot, employeeName, employeeProfile, getLot, getProduct, isReady, lotsForProduct, registerEmployee, restoreProduct, signIn, signOut, signedIn, snapshot, updateNotificationPreferences, updateProduct]);
   return <InventoryContext.Provider value={value}>{children}</InventoryContext.Provider>;
 }
 
