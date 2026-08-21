@@ -89,3 +89,5 @@
 - [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações
 - [x] Adicionar filtro de movimentações por produto na interface do histórico
 - [x] Confirmar e enviar todas as alterações acumuladas ao GitHub
+- [x] Configurar alertas remotos de validade no Supabase para aparelhos autorizados
+- [x] Entregar alertas de vencimento a todos os aparelhos autorizados da mesma loja
