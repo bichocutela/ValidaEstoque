@@ -25,8 +25,8 @@ export function formatDays(days: number) {
   return `Vence em ${days} dias`;
 }
 
-export function getLotTone(lot: ExpiryRecord): "success" | "warning" | "critical" | "error" {
-  const days = daysUntil(lot.expiryDate);
+export function getLotTone(lot: ExpiryRecord, reference = new Date()): "success" | "warning" | "critical" | "error" {
+  const days = daysUntil(lot.expiryDate, reference);
   if (lot.quality === "Vencido" || lot.quality === "Estragado" || days < 0) return "error";
   if (lot.quality === "Deteriorado" || lot.arrivalStatus === "Avariado") return "error";
   if (days <= 5 || lot.arrivalStatus === "Validade crítica") return "critical";

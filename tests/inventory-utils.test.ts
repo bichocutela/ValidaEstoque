@@ -18,10 +18,10 @@ describe("cálculos de validade", () => {
   });
 
   it("prioriza lotes vencidos, avariados e críticos", () => {
-    expect(getLotTone({ expiryDate: "2026-08-13" })).toBe("error");
-    expect(getLotTone({ expiryDate: "2026-09-12", arrivalStatus: "Avariado" })).toBe("error");
-    expect(getLotTone({ expiryDate: "2026-08-18" })).toBe("critical");
-    expect(getLotTone({ expiryDate: "2026-08-24" })).toBe("warning");
-    expect(getLotTone({ expiryDate: "2026-09-12" })).toBe("success");
+    expect(getLotTone({ expiryDate: "2026-08-13" }, referenceDate)).toBe("error");
+    expect(getLotTone({ expiryDate: "2026-09-12", arrivalStatus: "Avariado" }, referenceDate)).toBe("error");
+    expect(getLotTone({ expiryDate: "2026-08-18" }, referenceDate)).toBe("critical");
+    expect(getLotTone({ expiryDate: "2026-08-24" }, referenceDate)).toBe("warning");
+    expect(getLotTone({ expiryDate: "2026-09-12" }, referenceDate)).toBe("success");
   });
 });

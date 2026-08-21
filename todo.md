@@ -21,7 +21,7 @@
 - [x] Entregar backup protegido da chave de assinatura Android
 - [x] Criar estrutura de inventário e regras de acesso no Supabase
 - [x] Registrar o aplicativo Android no Firebase e preparar notificações
-- [ ] Conectar o aplicativo aos serviços configurados e validar sincronização
+- [x] Conectar o aplicativo aos serviços configurados e validar sincronização
 - [ ] Centralizar alertas, dispositivos e preferências de notificação no Supabase
 - [x] Cadastrar configurações protegidas de Firebase e Supabase no GitHub
 - [x] Entregar ZIP protegido e organizado de todas as credenciais utilizadas
@@ -58,3 +58,17 @@
 - [ ] Configurar entrega e agendamento de alertas de validade pelo Supabase
 - [ ] Validar notificações em APK de teste com dispositivo Android
 - [x] Preparar o registro de notificações para múltiplos aparelhos vinculados aos usuários autorizados
+- [x] Adicionar opção de cadastro de funcionário na tela inicial
+- [x] Criar contas de funcionários no Supabase para substituir o login temporário
+- [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
+- [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações
+- [x] Substituir o cadastro por e-mail por nome, sobrenome e matrícula como credencial de acesso
+- [x] Aprovar automaticamente novos funcionários cadastrados por matrícula
+- [x] Persistir a sessão autenticada e os cadastros no Supabase sem repetição de registro
+- [x] Sincronizar continuamente produtos, lotes, movimentações, preferências e eventos com o Supabase
+- [x] Criar área administrativa para visualizar funcionários, acessos, produtos cadastrados e movimentações por usuário
+- [x] Registrar horários de login e eventos operacionais por funcionário
+- [x] Sincronizar automaticamente produtos, lotes e movimentações com o Supabase
+- [x] Criar contas de funcionários no Supabase para substituir o login temporário
+- [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
+- [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações

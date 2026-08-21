@@ -14,7 +14,7 @@ const CURRENT_VERSION = Constants.expoConfig?.version ?? "1.0.0";
 
 export default function MoreScreen() {
   const router = useRouter();
-  const { employeeName, signOut } = useInventory();
+  const { employeeName, employeeRole, signOut } = useInventory();
   const [release, setRelease] = useState<AppRelease | null>(null);
   const [status, setStatus] = useState<UpdateStatus>("idle");
   const [progress, setProgress] = useState(0);
@@ -55,7 +55,7 @@ export default function MoreScreen() {
   return <ScreenContainer className="px-5" containerClassName="bg-background"><View style={styles.page}>
     <Text style={styles.title}>Mais</Text><Text style={styles.subtitle}>Acompanhe a operação e ajuste preferências.</Text>
     <View style={styles.profile}><View style={styles.avatar}><Text style={styles.avatarText}>{employeeName.split(" ").map((part) => part[0]).slice(0, 2).join("")}</Text></View><View><Text style={styles.profileName}>{employeeName}</Text><Text style={styles.profileRole}>Controle de estoque</Text></View></View>
-    <View style={styles.menu}><MenuItem icon="history" title="Histórico" description="Entradas, baixas e responsáveis" onPress={() => router.push("/history")} /><MenuItem icon="insights" title="Relatórios" description="Perdas e indicadores do período" onPress={() => router.push("/reports")} /><MenuItem icon="notifications-active" title="Configurações" description="Alertas de validade e notificações" onPress={() => router.push("/settings")} /><MenuItem icon="info-outline" title="Sobre" description={`Versão instalada v${CURRENT_VERSION}`} onPress={() => router.push("/about" as never)} /></View>
+    <View style={styles.menu}><MenuItem icon="history" title="Histórico" description="Entradas, baixas e responsáveis" onPress={() => router.push("/history")} /><MenuItem icon="insights" title="Relatórios" description="Perdas e indicadores do período" onPress={() => router.push("/reports")} />{employeeRole === "admin" ? <MenuItem icon="admin-panel-settings" title="Administração" description="Funcionários, acessos e auditoria" onPress={() => router.push("/admin" as never)} /> : null}<MenuItem icon="notifications-active" title="Configurações" description="Alertas de validade e notificações" onPress={() => router.push("/settings")} /><MenuItem icon="info-outline" title="Sobre" description={`Versão instalada v${CURRENT_VERSION}`} onPress={() => router.push("/about" as never)} /></View>
     {release ? <UpdateCard release={release} status={status} progress={progress} error={error} onInstall={() => void installUpdate()} onRetry={() => void checkUpdate()} /> : null}
     <Pressable accessibilityRole="button" accessibilityLabel="Encerrar sessão" onPress={signOut} style={({ pressed }) => [styles.logout, pressed && styles.pressed]}><MaterialIcons name="logout" size={20} color="#C73737" /><Text style={styles.logoutText}>Encerrar sessão</Text></Pressable>
   </View></ScreenContainer>;

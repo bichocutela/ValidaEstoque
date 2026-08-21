@@ -34,7 +34,7 @@ function AppNavigator() {
     if (!signedIn && !isHomeRoute) router.replace("/(tabs)");
   }, [pathname, router, signedIn]);
 
-  return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="(tabs)" /><Stack.Screen name="product/[id]" /><Stack.Screen name="lot/[id]" /><Stack.Screen name="history" /><Stack.Screen name="reports" /><Stack.Screen name="settings" /><Stack.Screen name="about" /><Stack.Screen name="oauth/callback" /></Stack>;
+  return <Stack screenOptions={{ headerShown: false }}><Stack.Screen name="(tabs)" /><Stack.Screen name="register" /><Stack.Screen name="admin" /><Stack.Screen name="product/[id]" /><Stack.Screen name="lot/[id]" /><Stack.Screen name="history" /><Stack.Screen name="reports" /><Stack.Screen name="settings" /><Stack.Screen name="about" /><Stack.Screen name="oauth/callback" /></Stack>;
 }
 
 function NotificationBootstrap() {
