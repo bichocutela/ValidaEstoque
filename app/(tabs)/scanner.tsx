@@ -2,7 +2,7 @@ import MaterialIcons from "@expo/vector-icons/MaterialIcons";
 import { CameraView, useCameraPermissions, type BarcodeScanningResult } from "expo-camera";
 import { setAudioModeAsync, useAudioPlayer } from "expo-audio";
 import { useIsFocused } from "@react-navigation/native";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useRef, useState } from "react";
 import { Alert, Animated, Easing, Image, Modal, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 
@@ -20,6 +20,7 @@ type ScanResolution = { details: BarcodeDetails; product?: InventoryProduct; exi
 
 export default function ScannerScreen() {
   const router = useRouter();
+  const { productId } = useLocalSearchParams<{ productId?: string }>();
   const focused = useIsFocused();
   const { addLot, products, lots, notificationPreferences } = useInventory();
   const cameraRef = useRef<CameraView>(null);
@@ -38,6 +39,12 @@ export default function ScannerScreen() {
   const successTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const update = (key: keyof typeof form, value: string) => setForm((current) => ({ ...current, [key]: value }));
+  useEffect(() => {
+    if (!productId) return;
+    const product = products.find((item) => item.id === productId);
+    if (!product) return;
+    setForm((current) => ({ ...current, name: product.name, brand: product.brand, category: product.category, volume: product.volume, barcode: product.barcode }));
+  }, [productId, products]);
   useEffect(() => {
     setAudioModeAsync({ playsInSilentMode: true }).catch(() => undefined);
     return () => { if (successTimer.current) clearTimeout(successTimer.current); };

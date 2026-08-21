@@ -23,6 +23,27 @@ export async function recordEmployeeEvent(profile: EmployeeProfile, eventType: "
   }
 }
 
+export async function deleteRemoteProduct(profile: EmployeeProfile, clientRef: string) {
+  const { data: product, error: productError } = await supabase.from("inventory_products").select("id").eq("store_id", profile.store_id).eq("client_ref", clientRef).maybeSingle();
+  if (productError) throw productError;
+  if (!product) return;
+  const { data: lots, error: lotsError } = await supabase.from("inventory_lots").select("id").eq("product_id", product.id).limit(500);
+  if (lotsError) throw lotsError;
+  const lotIds = (lots ?? []).map((lot) => lot.id);
+  if (lotIds.length) {
+    const notificationsResult = await supabase.from("notifications").delete().in("lot_id", lotIds);
+    if (notificationsResult.error) throw notificationsResult.error;
+    const movementsResult = await supabase.from("inventory_movements").delete().in("lot_id", lotIds);
+    if (movementsResult.error) throw movementsResult.error;
+    const lotsResult = await supabase.from("inventory_lots").delete().in("id", lotIds);
+    if (lotsResult.error) throw lotsResult.error;
+  }
+  const productMovementsResult = await supabase.from("inventory_movements").delete().eq("product_id", product.id);
+  if (productMovementsResult.error) throw productMovementsResult.error;
+  const productResult = await supabase.from("inventory_products").delete().eq("id", product.id);
+  if (productResult.error) throw productResult.error;
+}
+
 export async function loadRemoteInventory(): Promise<RemoteInventorySnapshot | null> {
   const [productsResult, lotsResult, movementsResult, preferencesResult] = await Promise.all([
     supabase.from("inventory_products").select("id,client_ref,name,brand,category,volume,barcode").order("updated_at", { ascending: false }),

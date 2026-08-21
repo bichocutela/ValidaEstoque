@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type PropsWithChildren } from "react";
 
 import { accountEmailForRegistration, normalizeRegistrationNumber } from "@/lib/auth-rules";
-import { loadEmployeeProfile, loadRemoteInventory, recordEmployeeEvent, synchronizeInventory } from "@/lib/inventory-sync";
+import { deleteRemoteProduct, loadEmployeeProfile, loadRemoteInventory, recordEmployeeEvent, synchronizeInventory } from "@/lib/inventory-sync";
 import { supabase, type EmployeeProfile, type EmployeeRole } from "@/lib/supabase-client";
 import type { ScannerTone } from "@/lib/scanner-sounds";
 import {
@@ -33,6 +33,8 @@ type InventoryContextValue = Snapshot & {
   getProduct: (id: string) => InventoryProduct | undefined;
   getLot: (id: string) => InventoryLot | undefined;
   lotsForProduct: (productId: string) => InventoryLot[];
+  updateProduct: (productId: string, updates: Pick<InventoryProduct, "name" | "brand" | "category" | "volume" | "barcode">) => void;
+  deleteProduct: (productId: string) => Promise<{ success: boolean; message?: string }>;
   addLot: (input: NewLotInput) => { lot: InventoryLot; isCritical: boolean };
   editLot: (lotId: string, updates: Partial<Pick<InventoryLot, "expiryDate" | "quality" | "arrivalStatus" | "currentQuantity">>) => void;
   confirmLot: (lotId: string) => void;
@@ -176,6 +178,31 @@ export function InventoryProvider({ children }: PropsWithChildren) {
   const getLot = useCallback((id: string) => snapshot.lots.find((lot) => lot.id === id), [snapshot.lots]);
   const lotsForProduct = useCallback((productId: string) => snapshot.lots.filter((lot) => lot.productId === productId), [snapshot.lots]);
 
+  const updateProduct = useCallback((productId: string, updates: Pick<InventoryProduct, "name" | "brand" | "category" | "volume" | "barcode">) => {
+    setSnapshot((current) => ({ ...current, products: current.products.map((product) => product.id === productId ? { ...product, ...updates } : product) }));
+  }, []);
+
+  const deleteProduct = useCallback(async (productId: string) => {
+    const product = snapshot.products.find((item) => item.id === productId);
+    if (!product) return { success: false, message: "Produto não encontrado." };
+    try {
+      if (employeeProfile) await deleteRemoteProduct(employeeProfile, product.id);
+      setSnapshot((current) => {
+        const lots = current.lots.filter((lot) => lot.productId !== productId);
+        const validLotIds = new Set(lots.map((lot) => lot.id));
+        return {
+          ...current,
+          products: current.products.filter((item) => item.id !== productId),
+          lots,
+          movements: current.movements.filter((movement) => movement.productId !== productId && validLotIds.has(movement.lotId)),
+        };
+      });
+      return { success: true };
+    } catch {
+      return { success: false, message: "Não foi possível excluir este produto agora. Verifique sua conexão e tente novamente." };
+    }
+  }, [employeeProfile, snapshot.products]);
+
   const addLot = useCallback((input: NewLotInput) => {
     const normalizedName = input.product.name.trim().toLowerCase();
     const existing = snapshot.products.find((product) => product.barcode === input.product.barcode || (product.name.toLowerCase() === normalizedName && product.brand === input.product.brand));
@@ -239,7 +266,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     setSnapshot((current) => ({ ...current, notificationPreferences: { ...current.notificationPreferences, ...updates } }));
   }, []);
 
-  const value = useMemo(() => ({ ...snapshot, isReady, signedIn, employeeName, employeeRole: employeeProfile?.role ?? null, employeeProfile, signIn, registerEmployee, signOut, getProduct, getLot, lotsForProduct, addLot, editLot, confirmLot, createMovement, updateNotificationPreferences }), [addLot, confirmLot, createMovement, editLot, employeeName, employeeProfile, getLot, getProduct, isReady, lotsForProduct, registerEmployee, signIn, signOut, signedIn, snapshot, updateNotificationPreferences]);
+  const value = useMemo(() => ({ ...snapshot, isReady, signedIn, employeeName, employeeRole: employeeProfile?.role ?? null, employeeProfile, signIn, registerEmployee, signOut, getProduct, getLot, lotsForProduct, updateProduct, deleteProduct, addLot, editLot, confirmLot, createMovement, updateNotificationPreferences }), [addLot, confirmLot, createMovement, deleteProduct, editLot, employeeName, employeeProfile, getLot, getProduct, isReady, lotsForProduct, registerEmployee, signIn, signOut, signedIn, snapshot, updateNotificationPreferences, updateProduct]);
   return <InventoryContext.Provider value={value}>{children}</InventoryContext.Provider>;
 }
 
