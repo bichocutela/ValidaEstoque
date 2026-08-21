@@ -74,6 +74,7 @@
 - [x] Adicionar aviso sonoro e animação de sucesso após uma leitura válida de código de barras
 - [x] Permitir ativar ou desativar o som de confirmação do leitor nas configurações
 - [x] Permitir escolher e testar diferentes tons de confirmação sonora do leitor
+- [x] Extrair lote, validade e quantidade de códigos GS1-128 compatíveis
 - [x] Criar contas de funcionários no Supabase para substituir o login temporário
 - [x] Definir perfis e permissões operacionais para funcionários, gestores e administradores
 - [x] Vincular o login institucional ao inventário, aos dispositivos e às notificações

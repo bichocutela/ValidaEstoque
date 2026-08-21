@@ -5,6 +5,8 @@ export type BarcodeDetails = {
   gtin?: string;
   lot?: string;
   expiryDate?: string;
+  quantity?: number;
+  quantityAi?: "30" | "37";
 };
 
 const GROUP_SEPARATOR = /[\u001d|]/g;
@@ -24,6 +26,12 @@ function parseGs1Date(value: string) {
   return `${year}-${String(month).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 }
 
+function parseGs1Quantity(value: string) {
+  if (!/^\d{1,8}$/.test(value)) return undefined;
+  const quantity = Number(value);
+  return Number.isSafeInteger(quantity) && quantity > 0 ? quantity : undefined;
+}
+
 export function parseBarcode(rawValue: string): BarcodeDetails {
   const raw = rawValue.trim();
   const normalized = raw.replace(GROUP_SEPARATOR, "\u001d");
@@ -31,15 +39,19 @@ export function parseBarcode(rawValue: string): BarcodeDetails {
   const bracketedGtin = normalized.match(/\(01\)(\d{14})/);
   const bracketedExpiry = normalized.match(/\(17\)(\d{6})/);
   const bracketedLot = normalized.match(/\(10\)([^\u001d(]{1,20})/);
+  const bracketedQuantity = normalized.match(/\((30|37)\)(\d{1,8})/);
   const rawGtin = humanReadable.startsWith("01") ? humanReadable.match(/^01(\d{14})/) : null;
-  const contentAfterGtin = rawGtin ? humanReadable.slice((rawGtin.index ?? 0) + 16) : humanReadable;
+  const contentAfterGtin = rawGtin ? humanReadable.slice(16) : humanReadable;
   const rawExpiry = rawGtin ? contentAfterGtin.match(/17(\d{6})/) : null;
   const rawLot = rawGtin ? contentAfterGtin.match(/10([^\u001d]{1,20})/) : null;
+  const rawQuantity = rawGtin ? contentAfterGtin.match(/(?:^|\u001d|17\d{6})(30|37)(\d{1,8})(?=\u001d|$)/) : null;
   const gtin = bracketedGtin?.[1] ?? rawGtin?.[1];
   const expiry = bracketedExpiry?.[1] ?? rawExpiry?.[1];
   const lot = bracketedLot?.[1] ?? rawLot?.[1];
+  const quantityAi = bracketedQuantity?.[1] ?? rawQuantity?.[1];
+  const quantity = parseGs1Quantity(bracketedQuantity?.[2] ?? rawQuantity?.[2] ?? "");
 
-  if (gtin || expiry || lot) {
+  if (gtin || expiry || lot || quantity) {
     return {
       raw,
       normalized,
@@ -47,6 +59,8 @@ export function parseBarcode(rawValue: string): BarcodeDetails {
       gtin: gtin ? normalizeGtin(gtin) : undefined,
       lot: lot?.trim() || undefined,
       expiryDate: expiry ? parseGs1Date(expiry) : undefined,
+      quantity,
+      quantityAi: quantityAi === "30" || quantityAi === "37" ? quantityAi : undefined,
     };
   }
 
