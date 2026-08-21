@@ -21,7 +21,7 @@ type ScanResolution = { details: BarcodeDetails; product?: InventoryProduct; exi
 export default function ScannerScreen() {
   const router = useRouter();
   const focused = useIsFocused();
-  const { addLot, products, lots } = useInventory();
+  const { addLot, products, lots, notificationPreferences } = useInventory();
   const cameraRef = useRef<CameraView>(null);
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraOpen, setCameraOpen] = useState(false);
@@ -44,8 +44,10 @@ export default function ScannerScreen() {
     setScanSuccess(true);
     successScale.setValue(0.72);
     successOpacity.setValue(0);
-    successPlayer.seekTo(0);
-    successPlayer.play();
+    if (notificationPreferences.scannerSoundEnabled) {
+      successPlayer.seekTo(0);
+      successPlayer.play();
+    }
     Animated.parallel([
       Animated.timing(successOpacity, { toValue: 1, duration: 110, useNativeDriver: true }),
       Animated.spring(successScale, { toValue: 1, damping: 13, stiffness: 240, mass: 0.65, useNativeDriver: true }),

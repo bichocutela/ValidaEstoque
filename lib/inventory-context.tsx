@@ -18,7 +18,7 @@ import {
   type Quality,
 } from "@/lib/inventory-data";
 
-export type NotificationPreferences = { enabled: boolean; sameDay: boolean; days: number };
+export type NotificationPreferences = { enabled: boolean; sameDay: boolean; days: number; scannerSoundEnabled: boolean };
 type Snapshot = { products: InventoryProduct[]; lots: InventoryLot[]; movements: Movement[]; notificationPreferences: NotificationPreferences };
 type InventoryContextValue = Snapshot & {
   isReady: boolean;
@@ -40,7 +40,7 @@ type InventoryContextValue = Snapshot & {
 };
 
 const STORAGE_KEY = "validaestoque-v1";
-const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, sameDay: true, days: 5 };
+const DEFAULT_NOTIFICATION_PREFERENCES: NotificationPreferences = { enabled: true, sameDay: true, days: 5, scannerSoundEnabled: true };
 const InventoryContext = createContext<InventoryContextValue | null>(null);
 const DEMO_PRODUCT_IDS = new Set(["p-apple", "p-bread", "p-cola", "p-ham", "p-milk", "p-yogurt"]);
 
@@ -109,7 +109,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
       return { success: false, message: "Este acesso está suspenso. Procure a administração." };
     }
     const remoteSnapshot = await loadRemoteInventory();
-    if (remoteSnapshot) setSnapshot({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })) });
+    if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled } }));
     setEmployeeProfile(profile);
     setEmployeeName(profile.full_name);
     setSignedIn(true);
@@ -165,7 +165,7 @@ export function InventoryProvider({ children }: PropsWithChildren) {
     if (!signedIn || !employeeProfile) return;
     const interval = setInterval(() => {
       void loadRemoteInventory().then((remoteSnapshot) => {
-        if (remoteSnapshot) setSnapshot({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })) });
+        if (remoteSnapshot) setSnapshot((current) => ({ ...remoteSnapshot, products: remoteSnapshot.products.map((product) => ({ ...product, image: PRODUCT_IMAGES.assortment })), notificationPreferences: { ...remoteSnapshot.notificationPreferences, scannerSoundEnabled: current.notificationPreferences.scannerSoundEnabled } }));
       }).catch(() => undefined);
     }, 20000);
     return () => clearInterval(interval);
